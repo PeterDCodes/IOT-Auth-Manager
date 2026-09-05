@@ -4,23 +4,35 @@ import crypto from "crypto"
 
 //Create key and register new device
 /**
- * @param {number} id device id
- * @param {string} name name of the device
- * @param {string} serial device serial number
- * @param {string} mac_addr MAC address of device
- * @param {string} device_ip static IP
+ * @param {Object} device - Device registration information.
+ * @param {number} device.id device id
+ * @param {string} device.name name of the device
+ * @param {string} device.serial device serial number
+ * @param {string} device.mac_addr MAC address of device
+ * @param {string} device.device_ip static IP
 */
-export const registerNewDevice=async(id, name, serial, mac_addr, device_ip)=>{
+export const registerNewDevice=async({id, name, serial, mac_addr, device_ip})=>{
     //TODO error handling
 
-    //Create Key
-    const key = makeKey();
-    //Hash key
-    const hashed_key = await makeHash(key);
-    //Store new device registration into DB
-    addDevice(id, name, serial, mac_addr, device_ip, hashed_key)
-    //Return original key to client
-    return key;
+    //Check if device exists
+    try{
+        const device = getDeviceById(id)
+        if(device && device.active == 1){
+            throw new Error("Active Device with Duplicate id exists")
+        }
+
+        //Create Key
+        const key = makeKey();
+        //Hash key
+        const hashed_key = await makeHash(key);
+        //Store new device registration into DB
+        addDevice(id, name, serial, mac_addr, device_ip, hashed_key)
+        //Return original key to client
+        return key;
+    }catch(error){
+        throw new Error("Failed to register Device", {cause: error})
+    }
+
 }
 
 //Insert Device into DB
@@ -63,15 +75,15 @@ export const addDevice=(id, name, serial, mac_addr, device_ip, hashed_key)=>{
 export const getDeviceById=(id)=>{
 
     //todo ID validation
-
     // Create a prepared statement to read data from the database.
     const query = database.prepare(`
     SELECT *
     FROM devices
     WHERE id = ?
     `);
+    
+    return query.get(id);
 
-  return query.get(id);
 }
 
 
@@ -82,7 +94,6 @@ export const getDevices=()=>{
     // Execute the prepared statement and log the result set.
     return(query.all());
 }
-
 
 
 //HELPER METHODS

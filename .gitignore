@@ -5,3 +5,5 @@ node_modules/
 
 # Database
 devices.db
+
+TestKey.txt

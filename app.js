@@ -1,7 +1,8 @@
 import express from 'express'
 import needauth from './routes/needauth.js'
 import noauth from './routes/noauth.js'
-import {authenticate} from './authenticate.js'
+import authentication from './routes/authentication.js'
+import {authenticate} from './middlewear/authenticate.js'
 
 const app = express();
 const port = 3000;
@@ -13,6 +14,10 @@ app.use(express.json());
 app.use("/", noauth);
 //Protected Routes
 app.use("/secret", authenticate, needauth);
+
+//Device Authenitcation Routes
+app.use("/auth", authentication);
+
 
 // Catch any random/unhandled route (404 handler)
 app.use(function(req, res, next) {
