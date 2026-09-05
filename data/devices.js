@@ -1,7 +1,16 @@
 import * as helpers from "./helpers.js"
 import database from "./database.js"
+import crypto from "crypto"
+
 
 //Create key and register new device
+/**
+ * @param {number} id device id
+ * @param {string} name name of the device
+ * @param {string} serial device serial number
+ * @param {string} mac_addr MAC address of device
+ * @param {string} device_ip static IP
+*/
 export const registerNewDevice=async(id, name, serial, mac_addr, device_ip)=>{
     //TODO error handling
 
@@ -32,11 +41,39 @@ export const addDevice=(id, name, serial, mac_addr, device_ip, hashed_key)=>{
 }
 
 
-
 //Method to query all devices in the table
 export const getDevices=()=>{
     // Create a prepared statement to read data from the database.
     const query = database.prepare('SELECT * FROM devices ORDER BY id');
     // Execute the prepared statement and log the result set.
     return(query.all());
+}
+
+
+
+//HELPER METHODS
+
+//Helper utility for hashing and unhashing a key
+import bcrypt from "bcrypt";
+const SALT_ROUNDS = 12;
+// Hash Key
+/**
+*@param {string} secret secret key valur
+*@return {string} hashed secret
+*/
+export const makeHash=async(secret)=>{
+    const hash = await bcrypt.hash(secret, SALT_ROUNDS);
+    return hash
+}
+//Validate Key when given by user as part of auth
+export const validateHash=async(secret)=>{
+    const hash = await bcrypt.hash(secret, SALT_ROUNDS);
+    const isValid = await bcrypt.compare(secret, hash);
+}
+
+//Build client key
+export const makeKey=()=>{
+    //Generate random key for user
+    const key = crypto.randomBytes(32).toString('hex'); // Generates 64 hex characters
+    return key;
 }
