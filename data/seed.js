@@ -12,7 +12,10 @@ const createDeviceTable=(database)=>{
             serial TEXT,
             mac_addr TEXT,
             device_ip TEXT,
-            hashed_key TEXT
+            hashed_key TEXT,
+            dt_created TEXT,
+            dt_modified TEXT,
+            active INTEGER
         ) STRICT
         `);
     }catch(error){
