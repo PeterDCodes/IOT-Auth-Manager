@@ -1,7 +1,10 @@
 //AUTH Routes
 import express from 'express'
 import { getDeviceById, validateHash} from "../data/devices.js"
+import { getRefreshToken } from "../refresh.js"
 
+import "dotenv/config";
+const EXPIRES_IN = process.env.EXPIRES_IN;
 
 //Method for token validation
 /**
@@ -77,22 +80,16 @@ router.post('/refresh', async(req, res)=>{
     return res.status(403).send("Refresh request failed. UNAUTHORIZED DEVICE");
     }
 
-    //TODO - create a Signed JWT credential to return to the client
-    // {
-    //     "access_token": "eyJhbGciOiJSUzI1NiIs...",
-    //     "token_type": "Bearer",
-    //     "expires_in": 900
-    // }
-    const access_token = "TODO-makeatoken"
+    //create a Signed JWT credential to return to the client
+    const access_token = getRefreshToken(id)
     const token_type = "Bearer"
-    const expires_in = 900 //15 min
 
     
     //Return the registration key back to the client
     return res.status(200).json({
         "access_token": access_token,
         "token_type": token_type,
-        "expires_in": expires_in
+        "expires_in": EXPIRES_IN
     });
 });
 

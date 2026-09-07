@@ -1,22 +1,38 @@
-//Authentication Middlewear
-import { getDeviceById, validateHash} from "../data/devices.js"
+import jwt from "jsonwebtoken";
+import "dotenv/config";
 
-
-//TODO - This middlewear will actually validate the JWT
+const JWT_SECRET = process.env.JWT_SECRET;
 
 
 export const authenticate = async (req, res, next) => {
 
-  //TODO get the info needed from header
+  const authHeader = req.headers.authorization;
 
-  //TODO check the token sent and check if its valid
-
-  if(authorized !== true){
-    return res.status(403).send("UNAUTHORIZED DEVICE")
+  //Capture token stored in request header
+  if (!authHeader) {
+    return res.status(401).json({
+      error: "Access token required"
+    });
   }
+  const token = authHeader.split(" ")[1];
 
-  // 3. Call next() to move to the next function
-  next();
+
+  //verify the Token sent by client
+  try {
+    const payload = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    req.auth = payload;
+
+    next();
+
+  } catch (error) {
+    return res.status(401).json({
+      error: "Invalid or expired token"
+    });
+  };
 };
 
 
