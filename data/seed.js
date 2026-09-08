@@ -1,6 +1,6 @@
 
 //SEED methods to set up initial SQLite DB and set a test client
-import fs from 'node:fs'
+import fs from "node:fs"
 import database from "./database.js";
 import { registerNewDevice } from "./devices.js"
 
@@ -30,7 +30,7 @@ const createDeviceTable=(database)=>{
 //Builds and writes a seeded client for testing
 //Helper to write Seeded Test Key
 const saveKey=(secret)=>{
-    fs.writeFileSync('TestKey.txt', secret);
+    fs.writeFileSync("TestKey.txt", secret);
 }
 
 const SEED_CLIENT = {

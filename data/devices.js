@@ -90,7 +90,7 @@ export const getDeviceById=(id)=>{
 //Method to query all devices in the table
 export const getDevices=()=>{
     // Create a prepared statement to read data from the database.
-    const query = database.prepare('SELECT * FROM devices ORDER BY id');
+    const query = database.prepare("SELECT * FROM devices ORDER BY id");
     // Execute the prepared statement and log the result set.
     return(query.all());
 }
@@ -120,7 +120,7 @@ export const validateHash=async(secret, hash)=>{
 //Build client key
 export const makeKey=()=>{
     //Generate random key for user
-    const key = crypto.randomBytes(32).toString('hex'); // Generates 64 hex characters
+    const key = crypto.randomBytes(32).toString("hex"); // Generates 64 hex characters
     return key;
 }
 

@@ -1,4 +1,7 @@
 
+//The client will act as an AUTH interceptor
+
+//
 
 export class AuthClient{
 

@@ -1,4 +1,4 @@
-import { DatabaseSync } from 'node:sqlite';
-const database = new DatabaseSync('devices.db');
+import { DatabaseSync } from "node:sqlite";
+const database = new DatabaseSync("devices.db");
 
 export default database;

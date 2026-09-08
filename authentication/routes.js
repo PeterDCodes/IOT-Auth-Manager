@@ -1,31 +1,7 @@
 //AUTH Routes
-import express from 'express'
-import { getDeviceById, validateHash} from "../data/devices.js"
-import { getRefreshToken } from "../refresh.js"
-
-import "dotenv/config";
-const EXPIRES_IN = process.env.EXPIRES_IN;
-
-//Method for token validation
-/**
- * @param {INTEGER} id device ID
- * @param {string} secret device secret
- * @return {bool} authorized status of true or false
- */
-export const validateClientSecret=async(id, secret)=>{
-
-  //Check if user exists with that id
-  const user = getDeviceById(id);
-  if(!user){
-    return false;
-  }
-
-  //Hash the key
-  const { hashed_key } = user
-  const valid = await validateHash(secret, hashed_key);
-
-  return valid;
-}
+import express from "express"
+import { registerNewDevice } from "../data/devices.js"
+import { buildCredential, validateClientSecret } from "./helpers.js"
 
 
 const router = express.Router();
@@ -34,7 +10,7 @@ const router = express.Router();
 //TODO - device registration should require a 4 digit code. ex: user sets up new device and is prompted to enter a code w/ device info before the submission.
 
 //A route used to send a regstration request
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
 
   //Step 1 verify registration request body
   const register = req.body ?? {}
@@ -55,11 +31,10 @@ router.post('/register', async (req, res) => {
 });
 
 //Request a JWT from auth service
-router.post('/refresh', async(req, res)=>{
+router.post("/refresh", async(req, res)=>{
 
     //Check the body for the device id and secret
     const {id, secret} = req.body ?? {}
-
 
     //Check if id was sent
     if(id == null){
@@ -80,17 +55,10 @@ router.post('/refresh', async(req, res)=>{
     return res.status(403).send("Refresh request failed. UNAUTHORIZED DEVICE");
     }
 
-    //create a Signed JWT credential to return to the client
-    const access_token = getRefreshToken(id)
-    const token_type = "Bearer"
+    //Build and return credential to client
+    const credential = buildCredential(id)
+    return res.status(200).json(credential)
 
-    
-    //Return the registration key back to the client
-    return res.status(200).json({
-        "access_token": access_token,
-        "token_type": token_type,
-        "expires_in": EXPIRES_IN
-    });
 });
 
 export default router
