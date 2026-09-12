@@ -1,5 +1,10 @@
 import { getDeviceById, validateHash } from "../data/devices.js"
-import { getRefreshToken } from "../refresh.js"
+
+import jwt from "jsonwebtoken";
+import "dotenv/config";
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const EXPIRES_IN = process.env.EXPIRES_IN;
 
 //Method for token validation
 /**
@@ -22,10 +27,6 @@ export const validateClientSecret=async(id, secret)=>{
   return valid;
 }
 
-
-import "dotenv/config";
-const EXPIRES_IN = process.env.EXPIRES_IN;
-
 export const buildCredential=(id)=>{
 
     //create a Signed JWT credential to return to the client
@@ -39,4 +40,21 @@ export const buildCredential=(id)=>{
     };
 
     return credential;
+}
+
+
+export const getRefreshToken=(id)=>{
+    const payload = {
+        deviceId: id,
+    };
+
+    const token = jwt.sign(
+        payload,
+        JWT_SECRET,
+        {
+            expiresIn: EXPIRES_IN
+        }
+    );
+
+    return token;
 }

@@ -1,15 +1,5 @@
-
 //The client will act as an AUTH interceptor
-
-//
-
 export class AuthClient{
-
-    constructor(){
-        this.name = "test"
-        this.age = 1
-    }
-
 
     /**
     *Initializes a registration request
@@ -27,8 +17,6 @@ export class AuthClient{
         return response.secret
     }
         
-
-
 
     //Refresh
     /**
@@ -49,3 +37,8 @@ export class AuthClient{
  * It also securely stores secret value 
  * 
  */
+
+
+//The client class will be responsible for dvice registration, storing the secret, obtaining a refresh token
+
+

@@ -1,7 +1,8 @@
 import express from "express"
+import deviceRoutes from "./devices/routes.js"
 
 //Import Auth Library
-import { authRoutes, authenticate } from "../authentication/index.js"
+import { authRoutes, authenticate } from "./authentication/index.js"
 
 const app = express();
 const port = 3000;
@@ -11,6 +12,9 @@ app.use(express.json());
 //Use authentication routes
 app.use("/auth", authRoutes)
 
+//Use device routes
+app.use("/devices", deviceRoutes)
+
 
 //UNPROTECTED ROUTES
 app.get("/", (req, res) => {
@@ -18,19 +22,9 @@ app.get("/", (req, res) => {
 });
 
 
-app.get("/devices", async(req, res) => {
-  
-  const devices = await getDevices();
-
-  return res.json(devices)
-});
-
-
-
 //PROTECTED ROUTES
-
 // Protect everything below this line
-app.get("/secret", (req, res) =>{
+app.get("/secret", authenticate, (req, res) =>{
   res.send("Here is the secret message!");
 })
 
