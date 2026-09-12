@@ -21,7 +21,7 @@ router.post("/register", async (req, res) => {
   }
 
   //Initiate the registration
-  const secret = await registerNewDevice(id, name, serial, mac_addr, device_ip)
+  const secret = await registerNewDevice(register)
 
   //Return the registration key back to the client
   return res.status(200).json({

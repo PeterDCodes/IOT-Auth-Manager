@@ -1,4 +1,5 @@
 import express from "express"
+import cors from "cors"
 import deviceRoutes from "./devices/routes.js"
 
 //Import Auth Library
@@ -7,6 +8,7 @@ import { authRoutes, authenticate } from "./authentication/index.js"
 const app = express();
 const port = 3000;
 
+app.use(cors());
 app.use(express.json());
 
 //Use authentication routes

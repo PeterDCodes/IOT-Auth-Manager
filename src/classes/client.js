@@ -1,44 +1,198 @@
-//The client will act as an AUTH interceptor
-export class AuthClient{
+import axios from "axios";
 
-    /**
-    *Initializes a registration request
-    * @return {string} secret
-    */
-    async requestRegistration(){
+const REQUIRED_DEVICE_FIELDS = ["id", "name", "serial", "mac_addr", "device_ip"];
 
-        //Checks if device already registered (a secret is available in secret path)
-        //return secret
+export const createMemoryStorage = () => {
+  const values = new Map();
 
-        const REGISTRAION_URL = "this needs to be read from an env?"
-        //Otherwise make a request (device assumes it was not registered)
-        const response = await axios.get(REGISTRAION_URL);
-
-        return response.secret
+  return {
+    getItem(key) {
+      return values.has(key) ? values.get(key) : null;
+    },
+    setItem(key, value) {
+      values.set(key, String(value));
+    },
+    removeItem(key) {
+      values.delete(key);
     }
-        
+  };
+};
 
-    //Refresh
-    /**
-    * Initializes a token refrsh request to API. Will return token on success
-    * @return {string} secret
-    */
-    async requestRefresh(){
-        const REFRESH_URL = "this needs to be read from an env?"
-        //Otherwise make a request (device assumes it was not registered)
-        const response = await axios.get(REFRESH_URL);
+const readTokenExpiry = (token) => {
+  try {
+    const payload = token.split(".")[1];
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    return JSON.parse(atob(padded)).exp ?? null;
+  } catch {
+    return null;
+  }
+};
+
+export class AuthClient {
+  constructor({
+    baseURL,
+    deviceId = null,
+    storage = createMemoryStorage(),
+    storageKeyPrefix = "authClient",
+    registerPath = "/auth/register",
+    refreshPath = "/auth/refresh",
+    refreshLeewaySeconds = 30,
+    axiosOptions = {}
+  } = {}) {
+    if (!baseURL) {
+      throw new TypeError("AuthClient requires a baseURL");
     }
 
+    if (!storage?.getItem || !storage?.setItem || !storage?.removeItem) {
+      throw new TypeError("storage must implement getItem, setItem, and removeItem");
+    }
+
+    this.deviceId = deviceId;
+    this.secret = null;
+    this.accessToken = null;
+    this.refreshPromise = null;
+    this.storage = storage;
+    this.storageKeys = {
+      deviceId: `${storageKeyPrefix}.deviceId`,
+      secret: `${storageKeyPrefix}.secret`
+    };
+    this.registerPath = registerPath;
+    this.refreshPath = refreshPath;
+    this.refreshLeewaySeconds = refreshLeewaySeconds;
+
+    const clientOptions = { ...axiosOptions, baseURL };
+    this.authHttp = axios.create(clientOptions);
+    this.http = axios.create(clientOptions);
+
+    this.http.interceptors.request.use(async (config) => {
+      if (config.skipAuth === true) {
+        return config;
+      }
+
+      const token = await this.getAccessToken();
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    });
+
+    this.http.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status !== 401 || !originalRequest || originalRequest._authRetry || originalRequest.skipAuth === true) {
+          throw error;
+        }
+
+        originalRequest._authRetry = true;
+        this.accessToken = null;
+        const token = await this.getAccessToken();
+        originalRequest.headers = originalRequest.headers ?? {};
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+
+        return this.http.request(originalRequest);
+      }
+    );
+  }
+
+  async register(device) {
+    const missingFields = REQUIRED_DEVICE_FIELDS.filter((field) => device?.[field] == null);
+    if (missingFields.length > 0) {
+      throw new TypeError(`Missing required device fields: ${missingFields.join(", ")}`);
+    }
+
+    const response = await this.authHttp.post(this.registerPath, device);
+    const secret = response.data?.secret;
+
+    if (!secret) {
+      throw new Error("Registration response did not include a secret");
+    }
+
+    this.deviceId = device.id;
+    this.secret = secret;
+    this.accessToken = null;
+    await this.storage.setItem(this.storageKeys.deviceId, device.id);
+    await this.storage.setItem(this.storageKeys.secret, secret);
+
+    return response.data;
+  }
+
+  async requestRegistration(device) {
+    return this.register(device);
+  }
+
+  async refresh() {
+    const { deviceId, secret } = await this.getDeviceCredentials();
+    if (deviceId == null || !secret) {
+      throw new Error("Device registration is required before requesting an access token");
+    }
+
+    const response = await this.authHttp.post(this.refreshPath, {
+      id: deviceId,
+      secret
+    });
+    const credential = response.data;
+
+    if (!credential?.access_token) {
+      throw new Error("Refresh response did not include an access token");
+    }
+
+    this.accessToken = credential.access_token;
+    return credential;
+  }
+
+  async requestRefresh() {
+    return this.refresh();
+  }
+
+  async getAccessToken() {
+    if (this.isAccessTokenUsable()) {
+      return this.accessToken;
+    }
+
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.refresh().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+
+    const credential = await this.refreshPromise;
+    return credential.access_token;
+  }
+
+  async getDeviceCredentials() {
+    const storedDeviceId = await this.storage.getItem(this.storageKeys.deviceId);
+    const storedSecret = await this.storage.getItem(this.storageKeys.secret);
+
+    return {
+      deviceId: this.deviceId ?? storedDeviceId,
+      secret: this.secret ?? storedSecret
+    };
+  }
+
+  isAccessTokenUsable() {
+    if (!this.accessToken) {
+      return false;
+    }
+
+    const expiresAt = readTokenExpiry(this.accessToken);
+    if (expiresAt == null) {
+      return false;
+    }
+
+    return expiresAt > Math.floor(Date.now() / 1000) + this.refreshLeewaySeconds;
+  }
+
+  async clear() {
+    this.deviceId = null;
+    this.secret = null;
+    this.accessToken = null;
+    this.refreshPromise = null;
+    await this.storage.removeItem(this.storageKeys.deviceId);
+    await this.storage.removeItem(this.storageKeys.secret);
+  }
 }
 
-/**
- * Auth Client is intended to be used in your library
- * Its job is to initialize and then handle the tasks for registration and token refresh
- * It also securely stores secret value 
- * 
- */
-
-
-//The client class will be responsible for dvice registration, storing the secret, obtaining a refresh token
-
+export default AuthClient;
 

@@ -30,7 +30,7 @@ export const validateClientSecret=async(id, secret)=>{
 export const buildCredential=(id)=>{
 
     //create a Signed JWT credential to return to the client
-    const access_token = getRefreshToken(id)
+    const access_token = getAccessToken(id)
     const token_type = "Bearer"
     
     const credential = {
@@ -43,7 +43,7 @@ export const buildCredential=(id)=>{
 }
 
 
-export const getRefreshToken=(id)=>{
+export const getAccessToken=(id)=>{
     const payload = {
         deviceId: id,
     };
