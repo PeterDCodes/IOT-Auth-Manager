@@ -32,6 +32,8 @@ const readTokenExpiry = (token) => {
 export class AuthClient {
   constructor({
     baseURL,
+    authBaseURL = baseURL,
+    apiBaseURL = baseURL ?? authBaseURL,
     deviceId = null,
     storage = createMemoryStorage(),
     storageKeyPrefix = "authClient",
@@ -40,8 +42,12 @@ export class AuthClient {
     refreshLeewaySeconds = 30,
     axiosOptions = {}
   } = {}) {
-    if (!baseURL) {
-      throw new TypeError("AuthClient requires a baseURL");
+    if (!authBaseURL) {
+      throw new TypeError("AuthClient requires baseURL or authBaseURL");
+    }
+
+    if (!apiBaseURL) {
+      throw new TypeError("AuthClient requires baseURL or apiBaseURL");
     }
 
     if (!storage?.getItem || !storage?.setItem || !storage?.removeItem) {
@@ -61,9 +67,8 @@ export class AuthClient {
     this.refreshPath = refreshPath;
     this.refreshLeewaySeconds = refreshLeewaySeconds;
 
-    const clientOptions = { ...axiosOptions, baseURL };
-    this.authHttp = axios.create(clientOptions);
-    this.http = axios.create(clientOptions);
+    this.authHttp = axios.create({ ...axiosOptions, baseURL: authBaseURL });
+    this.http = axios.create({ ...axiosOptions, baseURL: apiBaseURL });
 
     this.http.interceptors.request.use(async (config) => {
       if (config.skipAuth === true) {
@@ -96,13 +101,16 @@ export class AuthClient {
     );
   }
 
-  async register(device) {
+  async register(device, { registrationCode } = {}) {
     const missingFields = REQUIRED_DEVICE_FIELDS.filter((field) => device?.[field] == null);
     if (missingFields.length > 0) {
       throw new TypeError(`Missing required device fields: ${missingFields.join(", ")}`);
     }
 
-    const response = await this.authHttp.post(this.registerPath, device);
+    const config = registrationCode
+      ? { headers: { "x-registration-code": registrationCode } }
+      : undefined;
+    const response = await this.authHttp.post(this.registerPath, device, config);
     const secret = response.data?.secret;
 
     if (!secret) {
@@ -118,8 +126,8 @@ export class AuthClient {
     return response.data;
   }
 
-  async requestRegistration(device) {
-    return this.register(device);
+  async requestRegistration(device, options) {
+    return this.register(device, options);
   }
 
   async refresh() {
@@ -195,4 +203,3 @@ export class AuthClient {
 }
 
 export default AuthClient;
-

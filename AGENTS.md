@@ -14,8 +14,8 @@
 Run `npm install` to install dependencies. Common commands are:
 
 - `npm start` — starts the API with `node app.js` at `http://localhost:3000`.
-- `npm run seed` — idempotently creates the PostgreSQL `devices` table using `DATABASE_URL`.
-- `npm test` — currently exits with an error because no test suite is configured.
+- `npm run seed` — idempotently creates the PostgreSQL `devices` table using the standard `PG*` environment variables.
+- `npm test` — runs the Node.js test suite.
 
 There is no compile or build step.
 
@@ -27,7 +27,7 @@ No formatter or linter is configured. Keep changes focused and match the surroun
 
 ## Testing Guidelines
 
-Until automated tests are added, seed a fresh PostgreSQL database, start the server, and exercise affected endpoints with `curl` or an API client. When adding tests, define a real `npm test` script and name files `*.test.js`, colocated with modules or under `test/`. Cover success, validation, duplicate-device, and authorization failure paths.
+Name test files `*.test.js`, colocated with modules or under `test/`. For database behavior, seed a fresh PostgreSQL database, start the server, and exercise affected endpoints with `curl` or an API client. Cover success, validation, duplicate-device, and authorization failure paths.
 
 ## Commit & Pull Request Guidelines
 

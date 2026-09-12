@@ -7,7 +7,8 @@
   "type": "module",
   "main": "./src/classes/client.js",
   "exports": {
-    ".": "./src/classes/client.js"
+    ".": "./src/classes/client.js",
+    "./express": "./src/express/index.js"
   },
   "scripts": {
     "test": "node --test",

@@ -12,6 +12,12 @@ const router = express.Router();
 //A route used to send a regstration request
 router.post("/register", async (req, res) => {
 
+  if (process.env.REGISTRATION_CODE && req.get("x-registration-code") !== process.env.REGISTRATION_CODE) {
+    return res.status(403).json({
+      error: "Valid registration code required"
+    })
+  }
+
   //Step 1 verify registration request body
   const register = req.body ?? {}
   const {id, name, serial, mac_addr, device_ip} = register

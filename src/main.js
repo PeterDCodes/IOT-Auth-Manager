@@ -26,8 +26,10 @@ app.get("/", (req, res) => {
 
 
 //PROTECTED ROUTES
-// Protect everything below this line
-app.get("/secret", authenticate, (req, res) =>{
+// Protect every route mounted under /secret
+app.use("/secret", authenticate)
+
+app.get("/secret", (req, res) =>{
   res.send("Here is the secret message!");
 })
 
