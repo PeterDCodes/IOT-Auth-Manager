@@ -1,5 +1,5 @@
 import express from "express"
-import { getDeviceById, getDevices } from "../data/devices.js"
+import { getDevices, getPublicDeviceById } from "../data/devices.js"
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.get("/", async(req, res) => {
 });
 
 router.get("/:id", async(req, res) => {
-  const device = await getDeviceById(req.params.id);
+  const device = await getPublicDeviceById(req.params.id);
 
   if (!device) {
     return res.status(404).send("Device not found");
@@ -19,4 +19,3 @@ router.get("/:id", async(req, res) => {
 });
 
 export default router;
-

@@ -2,8 +2,3 @@ package-lock.json
 node_modules/
 
 .env
-
-# Database
-devices.db
-
-TestKey.txt

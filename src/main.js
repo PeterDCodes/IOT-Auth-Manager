@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import deviceRoutes from "./devices/routes.js"
+import database, { verifyDatabaseConnection } from "./data/database.js"
 
 //Import Auth Library
 import { authRoutes, authenticate } from "./authentication/index.js"
@@ -36,6 +37,17 @@ app.use(function(req, res, next) {
   res.status(404).send("Route not found");
  });
 
-app.listen(port, () => {
-  console.log(`AUTH Service listening on port ${port}`);
-});
+const startServer=async()=>{
+  try {
+    await verifyDatabaseConnection()
+    app.listen(port, () => {
+      console.log(`AUTH Service listening on port ${port}`);
+    });
+  } catch (error) {
+    console.error(`Failed to connect to PostgreSQL: ${error.message}`)
+    await database.end()
+    process.exitCode = 1
+  }
+}
+
+await startServer()

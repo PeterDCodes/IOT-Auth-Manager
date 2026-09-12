@@ -15,7 +15,7 @@ const EXPIRES_IN = process.env.EXPIRES_IN;
 export const validateClientSecret=async(id, secret)=>{
 
   //Check if user exists with that id
-  const user = getDeviceById(id);
+  const user = await getDeviceById(id);
   if(!user){
     return false;
   }

@@ -5,16 +5,16 @@
 - `app.js` creates the Express application, mounts routers, and listens on port 3000.
 - `routes/` contains public, protected, and authentication endpoints. Keep each route grouped by access level and purpose.
 - `middlewear/` contains request middleware such as `authenticate.js`. Retain the existing directory name when adding imports or files.
-- `data/` owns SQLite access, device operations, and database seeding.
+- `data/` owns PostgreSQL access, device operations, and schema seeding.
 - `client/` contains the in-progress reusable authentication client.
-- Runtime files such as `devices.db` and `TestKey.txt` are generated locally and must not be committed.
+- Local environment values belong in `.env` and must not be committed.
 
 ## Build, Test, and Development Commands
 
 Run `npm install` to install dependencies. Common commands are:
 
 - `npm start` — starts the API with `node app.js` at `http://localhost:3000`.
-- `npm run seed` — creates the `devices` table and writes a seeded secret to `TestKey.txt`. Use a disposable local database; reruns may report existing data.
+- `npm run seed` — idempotently creates the PostgreSQL `devices` table using `DATABASE_URL`.
 - `npm test` — currently exits with an error because no test suite is configured.
 
 There is no compile or build step.
@@ -27,7 +27,7 @@ No formatter or linter is configured. Keep changes focused and match the surroun
 
 ## Testing Guidelines
 
-Until automated tests are added, seed a fresh local database, start the server, and exercise affected endpoints with `curl` or an API client. When adding tests, define a real `npm test` script and name files `*.test.js`, colocated with modules or under `test/`. Cover success, validation, duplicate-device, and authorization failure paths.
+Until automated tests are added, seed a fresh PostgreSQL database, start the server, and exercise affected endpoints with `curl` or an API client. When adding tests, define a real `npm test` script and name files `*.test.js`, colocated with modules or under `test/`. Cover success, validation, duplicate-device, and authorization failure paths.
 
 ## Commit & Pull Request Guidelines
 
