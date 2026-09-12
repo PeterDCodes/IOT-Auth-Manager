@@ -1,5 +1,8 @@
 A PostgreSQL-backed device registration service intended for mobile devices that are not tied to a specific user or account.
 
+<img width="826" height="1814" alt="image" src="https://github.com/user-attachments/assets/00ef556d-c920-4d89-b654-735612ec8483" />
+
+
 It provides device registration, secret-based access-token refresh, an Axios authentication client, and reusable Express middleware for authenticated API calls.
 
 ## Authentication flow
