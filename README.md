@@ -1,8 +1,5 @@
 A PostgreSQL-backed device registration service intended for mobile devices that are not tied to a specific user or account.
 
-<img width="103" height="227" alt="image" src="https://github.com/user-attachments/assets/00ef556d-c920-4d89-b654-735612ec8483" />
-
-
 It provides device registration, secret-based access-token refresh, an Axios authentication client, and reusable Express middleware for authenticated API calls.
 
 ## Authentication flow
@@ -127,6 +124,8 @@ app.use("/api", authenticate)
 The public key verifies tokens but cannot sign new ones. The issuer, audience, and allowed algorithm are also checked for every request.
 
 ## Client usage
+
+<img width="103" height="227" alt="image" src="https://github.com/user-attachments/assets/00ef556d-c920-4d89-b654-735612ec8483" />
 
 The default package export remains the Axios client used by browser or device applications:
 
