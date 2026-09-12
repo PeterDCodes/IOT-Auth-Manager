@@ -60,19 +60,18 @@ export const getTokenSettings = (environment = process.env) => {
   throw new Error("JWT_ALGORITHM must be HS256 or RS256")
 }
 
-export const signAccessToken = (deviceId, environment = process.env) => {
+export const signAccessToken = (cdDevice, environment = process.env) => {
   const settings = getTokenSettings(environment)
 
   return jwt.sign(
-    { deviceId },
+    { cd_device: cdDevice },
     settings.signingKey,
     {
       algorithm: settings.algorithm,
       issuer: settings.issuer,
       audience: settings.audience,
-      subject: String(deviceId),
+      subject: String(cdDevice),
       expiresIn: settings.expiresIn
     }
   )
 }
-

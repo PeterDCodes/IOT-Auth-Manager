@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const REQUIRED_DEVICE_FIELDS = ["id", "name", "serial", "mac_addr", "device_ip"];
+const REQUIRED_DEVICE_FIELDS = ["name", "serial", "mac_addr", "device_ip"];
 
 export const createMemoryStorage = () => {
   const values = new Map();
@@ -34,7 +34,7 @@ export class AuthClient {
     baseURL,
     authBaseURL = baseURL,
     apiBaseURL = baseURL ?? authBaseURL,
-    deviceId = null,
+    cdDevice = null,
     storage = createMemoryStorage(),
     storageKeyPrefix = "authClient",
     registerPath = "/auth/register",
@@ -54,13 +54,13 @@ export class AuthClient {
       throw new TypeError("storage must implement getItem, setItem, and removeItem");
     }
 
-    this.deviceId = deviceId;
+    this.cdDevice = cdDevice;
     this.secret = null;
     this.accessToken = null;
     this.refreshPromise = null;
     this.storage = storage;
     this.storageKeys = {
-      deviceId: `${storageKeyPrefix}.deviceId`,
+      cdDevice: `${storageKeyPrefix}.cdDevice`,
       secret: `${storageKeyPrefix}.secret`
     };
     this.registerPath = registerPath;
@@ -110,17 +110,25 @@ export class AuthClient {
     const config = registrationCode
       ? { headers: { "x-registration-code": registrationCode } }
       : undefined;
-    const response = await this.authHttp.post(this.registerPath, device, config);
+    const registration = Object.fromEntries(
+      REQUIRED_DEVICE_FIELDS.map((field) => [field, device[field]])
+    );
+    const response = await this.authHttp.post(this.registerPath, registration, config);
+    const cdDevice = response.data?.cd_device;
     const secret = response.data?.secret;
+
+    if (cdDevice == null) {
+      throw new Error("Registration response did not include cd_device");
+    }
 
     if (!secret) {
       throw new Error("Registration response did not include a secret");
     }
 
-    this.deviceId = device.id;
+    this.cdDevice = cdDevice;
     this.secret = secret;
     this.accessToken = null;
-    await this.storage.setItem(this.storageKeys.deviceId, device.id);
+    await this.storage.setItem(this.storageKeys.cdDevice, cdDevice);
     await this.storage.setItem(this.storageKeys.secret, secret);
 
     return response.data;
@@ -131,13 +139,13 @@ export class AuthClient {
   }
 
   async refresh() {
-    const { deviceId, secret } = await this.getDeviceCredentials();
-    if (deviceId == null || !secret) {
+    const { cdDevice, secret } = await this.getDeviceCredentials();
+    if (cdDevice == null || !secret) {
       throw new Error("Device registration is required before requesting an access token");
     }
 
     const response = await this.authHttp.post(this.refreshPath, {
-      id: deviceId,
+      cd_device: cdDevice,
       secret
     });
     const credential = response.data;
@@ -170,11 +178,11 @@ export class AuthClient {
   }
 
   async getDeviceCredentials() {
-    const storedDeviceId = await this.storage.getItem(this.storageKeys.deviceId);
+    const storedCdDevice = await this.storage.getItem(this.storageKeys.cdDevice);
     const storedSecret = await this.storage.getItem(this.storageKeys.secret);
 
     return {
-      deviceId: this.deviceId ?? storedDeviceId,
+      cdDevice: this.cdDevice ?? storedCdDevice,
       secret: this.secret ?? storedSecret
     };
   }
@@ -193,11 +201,11 @@ export class AuthClient {
   }
 
   async clear() {
-    this.deviceId = null;
+    this.cdDevice = null;
     this.secret = null;
     this.accessToken = null;
     this.refreshPromise = null;
-    await this.storage.removeItem(this.storageKeys.deviceId);
+    await this.storage.removeItem(this.storageKeys.cdDevice);
     await this.storage.removeItem(this.storageKeys.secret);
   }
 }

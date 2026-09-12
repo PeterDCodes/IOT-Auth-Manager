@@ -8,8 +8,8 @@ router.get("/", async(req, res) => {
   return res.json(devices)
 });
 
-router.get("/:id", async(req, res) => {
-  const device = await getPublicDeviceById(req.params.id);
+router.get("/:cd_device", async(req, res) => {
+  const device = await getPublicDeviceById(req.params.cd_device);
 
   if (!device) {
     return res.status(404).send("Device not found");

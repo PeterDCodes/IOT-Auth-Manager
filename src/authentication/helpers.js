@@ -3,14 +3,14 @@ import { getTokenSettings, signAccessToken } from "./token.js"
 
 //Method for token validation
 /**
- * @param {INTEGER} id device ID
+ * @param {INTEGER} cd_device device ID
  * @param {string} secret device secret
  * @return {bool} authorized status of true or false
  */
-export const validateClientSecret=async(id, secret)=>{
+export const validateClientSecret=async(cd_device, secret)=>{
 
-  //Check if user exists with that id
-  const user = await getDeviceById(id);
+  //Check if the device exists and is active
+  const user = await getDeviceById(cd_device);
   if(!user || user.active !== true){
     return false;
   }
@@ -22,10 +22,10 @@ export const validateClientSecret=async(id, secret)=>{
   return valid;
 }
 
-export const buildCredential=(id)=>{
+export const buildCredential=(cd_device)=>{
 
     //create a Signed JWT credential to return to the client
-    const access_token = getAccessToken(id)
+    const access_token = getAccessToken(cd_device)
     const token_type = "Bearer"
     const { expiresIn } = getTokenSettings()
     
@@ -39,6 +39,6 @@ export const buildCredential=(id)=>{
 }
 
 
-export const getAccessToken=(id)=>{
-    return signAccessToken(id)
+export const getAccessToken=(cd_device)=>{
+    return signAccessToken(cd_device)
 }

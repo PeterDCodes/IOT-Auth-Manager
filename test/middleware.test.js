@@ -37,7 +37,7 @@ const runMiddleware = (middleware, authorization) => {
 
 test("createAuthenticate accepts a valid HS256 access token", () => {
   const token = jwt.sign(
-    { deviceId: 42 },
+    { cd_device: 42 },
     SECRET,
     {
       algorithm: "HS256",
@@ -51,7 +51,7 @@ test("createAuthenticate accepts a valid HS256 access token", () => {
   const result = runMiddleware(authenticate, `Bearer ${token}`)
 
   assert.equal(result.nextCalled, true)
-  assert.equal(result.req.auth.deviceId, 42)
+  assert.equal(result.req.auth.cd_device, 42)
   assert.equal(result.res.statusCode, 200)
 })
 
@@ -67,7 +67,7 @@ test("createAuthenticate rejects a missing Bearer token", () => {
 
 test("createAuthenticate rejects an expired token", () => {
   const token = jwt.sign(
-    { deviceId: 42 },
+    { cd_device: 42 },
     SECRET,
     {
       algorithm: "HS256",
@@ -87,7 +87,7 @@ test("createAuthenticate rejects an expired token", () => {
 
 test("createAuthenticate rejects a token for another audience", () => {
   const token = jwt.sign(
-    { deviceId: 42 },
+    { cd_device: 42 },
     SECRET,
     {
       algorithm: "HS256",
@@ -106,7 +106,7 @@ test("createAuthenticate rejects a token for another audience", () => {
 
 test("createAuthenticate rejects a token signed with another secret", () => {
   const token = jwt.sign(
-    { deviceId: 42 },
+    { cd_device: 42 },
     "another-secret-that-is-long-enough-for-development",
     {
       algorithm: "HS256",
@@ -142,7 +142,7 @@ test("RS256 tokens can be issued and verified with only the public key", () => {
   const result = runMiddleware(authenticate, `Bearer ${token}`)
 
   assert.equal(result.nextCalled, true)
-  assert.equal(result.req.auth.deviceId, 42)
+  assert.equal(result.req.auth.cd_device, 42)
   assert.equal(result.req.auth.sub, "42")
 })
 
@@ -154,4 +154,55 @@ test("AuthClient supports separate authentication and API base URLs", () => {
 
   assert.equal(client.authHttp.defaults.baseURL, "http://localhost:3000")
   assert.equal(client.http.defaults.baseURL, "http://localhost:4000")
+})
+
+test("AuthClient stores the generated cd_device and sends it when refreshing", async () => {
+  const requests = []
+  const client = new AuthClient({
+    baseURL: "http://localhost:3000",
+    axiosOptions: {
+      adapter: async (config) => {
+        requests.push({ url: config.url, data: JSON.parse(config.data) })
+
+        const data = config.url === "/auth/register"
+          ? { cd_device: 7, secret: "generated-secret" }
+          : { access_token: "access-token" }
+
+        return {
+          data,
+          status: 200,
+          statusText: "OK",
+          headers: {},
+          config
+        }
+      }
+    }
+  })
+
+  await client.register({
+    cd_device: 999,
+    name: "Test Device",
+    serial: "TEST-001",
+    mac_addr: "00:00:00:00:00:01",
+    device_ip: "127.0.0.1"
+  })
+  await client.refresh()
+
+  assert.deepEqual(requests[0], {
+    url: "/auth/register",
+    data: {
+      name: "Test Device",
+      serial: "TEST-001",
+      mac_addr: "00:00:00:00:00:01",
+      device_ip: "127.0.0.1"
+    }
+  })
+  assert.deepEqual(requests[1], {
+    url: "/auth/refresh",
+    data: { cd_device: 7, secret: "generated-secret" }
+  })
+  assert.deepEqual(await client.getDeviceCredentials(), {
+    cdDevice: 7,
+    secret: "generated-secret"
+  })
 })

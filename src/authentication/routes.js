@@ -20,18 +20,19 @@ router.post("/register", async (req, res) => {
 
   //Step 1 verify registration request body
   const register = req.body ?? {}
-  const {id, name, serial, mac_addr, device_ip} = register
+  const {name, serial, mac_addr, device_ip} = register
 
-  if ([id, name, serial, mac_addr, device_ip].some(value => value == null)) {
+  if ([name, serial, mac_addr, device_ip].some(value => value == null)) {
     return res.status(400).send("Missing required fields");
   }
 
   //Initiate the registration
-  const secret = await registerNewDevice(register)
+  const { cd_device, secret } = await registerNewDevice(register)
 
   //Return the registration key back to the client
   return res.status(200).json({
     "message": "Device successfully Registered!",
+    "cd_device": cd_device,
     "secret": secret
   });
 });
@@ -39,12 +40,12 @@ router.post("/register", async (req, res) => {
 //Request a JWT from auth service
 router.post("/refresh", async(req, res)=>{
 
-    //Check the body for the device id and secret
-    const {id, secret} = req.body ?? {}
+    //Check the body for the database-generated device code and secret
+    const {cd_device, secret} = req.body ?? {}
 
-    //Check if id was sent
-    if(id == null){
-    return res.status(400).send("Refresh request failed. res body must include id")
+    //Check if cd_device was sent
+    if(cd_device == null){
+    return res.status(400).send("Refresh request failed. res body must include cd_device")
     }
 
     //Check if key was sent
@@ -53,7 +54,7 @@ router.post("/refresh", async(req, res)=>{
     }
 
     //Validate the token
-    const authorized = await validateClientSecret(id, secret);
+    const authorized = await validateClientSecret(cd_device, secret);
 
     console.log("AUTH STATUS: " + authorized);
 
@@ -62,7 +63,7 @@ router.post("/refresh", async(req, res)=>{
     }
 
     //Build and return credential to client
-    const credential = buildCredential(id)
+    const credential = buildCredential(cd_device)
     return res.status(200).json(credential)
 
 });
