@@ -5,18 +5,29 @@ const DEFAULT_ALGORITHM = "HS256"
 const DEFAULT_ISSUER = "client-register"
 const DEFAULT_AUDIENCE = "device-apis"
 
+/**
+ * reands process.env key
+ * @param {*} value 
+ * @param {*} path 
+ * @param {*} name 
+ * @returns 
+ */
 const readConfiguredKey = (value, path, name) => {
   if (value) {
     return value.replace(/\\n/g, "\n")
   }
-
   if (path) {
     return fs.readFileSync(path, "utf8")
   }
-
   throw new Error(`${name} is required`)
 }
 
+
+/**
+ * Reads env settings for token generation
+ * @param {*} environment 
+ * @returns 
+ */
 export const getTokenSettings = (environment = process.env) => {
   const algorithm = environment.JWT_ALGORITHM ?? DEFAULT_ALGORITHM
   const issuer = environment.JWT_ISSUER ?? DEFAULT_ISSUER
@@ -60,6 +71,13 @@ export const getTokenSettings = (environment = process.env) => {
   throw new Error("JWT_ALGORITHM must be HS256 or RS256")
 }
 
+
+/**
+ * Sings a jwt access token
+ * @param { number } cdDevice 
+ * @param { process.env } environment 
+ * @returns 
+ */
 export const signAccessToken = (cdDevice, environment = process.env) => {
   const settings = getTokenSettings(environment)
 

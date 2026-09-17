@@ -1,9 +1,10 @@
 import { getDeviceById, validateHash } from "../data/devices.js"
 import { getTokenSettings, signAccessToken } from "./token.js"
 
-//Method for token validation
+
 /**
- * @param {INTEGER} cd_device device ID
+ * Validates a client secret against active devices in the DB
+ * @param { number } cd_device device ID
  * @param {string} secret device secret
  * @return {bool} authorized status of true or false
  */
@@ -22,6 +23,12 @@ export const validateClientSecret=async(cd_device, secret)=>{
   return valid;
 }
 
+
+/**
+ * Creates and returns a full credential with signed JWT token
+ * @param { number } cd_device 
+ * @returns 
+ */
 export const buildCredential=(cd_device)=>{
 
     //create a Signed JWT credential to return to the client

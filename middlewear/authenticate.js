@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken"
-import { getTokenSettings } from "./token.js"
+import { getTokenSettings } from "../service/src/authentication/token.js"
 
 export const createAuthenticate = ({
   publicKey,
