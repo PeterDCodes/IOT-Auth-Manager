@@ -4,6 +4,8 @@ import deviceRoutes from "./devices/routes.js"
 import database, { verifyDatabaseConnection } from "./data/database.js"
 import { getPrivateKey } from "./authentication/helpers.js"
 
+import logger from "./utils/logging.js"
+
 //Import Auth Library
 import { authRoutes } from "./authentication/index.js"
 
@@ -41,9 +43,10 @@ const startServer=async()=>{
 
     app.listen(port, () => {
       console.log(`AUTH Service listening on port ${port}`);
+      logger.info(`AUTH Service listening on port ${port}`);
     });
   } catch (error) {
-    console.error(`Failed to launch Auth service: ${error.message}`)
+    logger.error(`Failed to launch Auth service: ${error.message}`)
     await database.end()
     process.exitCode = 1
   }

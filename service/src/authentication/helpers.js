@@ -1,6 +1,7 @@
 import { getDeviceById, validateHash } from "../data/devices.js"
 import jwt from "jsonwebtoken"
 import * as fs from 'node:fs'; 
+import logger from "../utils/logging.js"
 
 
 /**
@@ -24,7 +25,7 @@ export const getPrivateKey=(environment=process.env)=>{
  * Reads env file and returns token settings
  * @param environment process.env file
  */
-const getTokenSettings=(environment)=>{
+const getTokenSettings=(environment=process.env)=>{
 
   //Stub
   const tokenSettings = {
@@ -47,7 +48,7 @@ const getTokenSettings=(environment)=>{
     tokenSettings.audience = environment.AUDIENCE
     tokenSettings.expires_in = environment.EXPIRES_IN
   }catch(error){
-    console.log("Missing Required Settings value: " + error);
+    logger.error("Missing Required Settings value: " + error);
   }
 
   //TODO - need my error handling cleaned up for end users calling the api
@@ -99,7 +100,7 @@ export const signAccessToken = (cdDevice, environment = process.env) => {
       issuer: settings.issuer,
       audience: settings.audience,
       subject: String(cdDevice),
-      expires_in: settings.expires_in
+      expiresIn: settings.expires_in
     }
   )
 }

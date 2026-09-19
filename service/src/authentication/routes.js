@@ -2,16 +2,16 @@
 import express from "express"
 import { registerNewDevice } from "../data/devices.js"
 import { buildCredential, validateClientSecret } from "./helpers.js"
+import logger from "../utils/logging.js"
 
 
 const router = express.Router();
 
 //Register a device
-//TODO - device registration should require a 4 digit code. ex: user sets up new device and is prompted to enter a code w/ device info before the submission.
-
 //A route used to send a regstration request
 router.post("/register", async (req, res) => {
 
+  //If defined in the settings then payload should include registation code
   if (process.env.REGISTRATION_CODE && req.get("x-registration-code") !== process.env.REGISTRATION_CODE) {
     return res.status(403).json({
       error: "Valid registration code required"
@@ -57,7 +57,7 @@ router.post("/refresh", async(req, res)=>{
     const authorized = await validateClientSecret(cd_device, secret);
 
     //TODO - Set up formal logging feature
-    console.log("AUTH STATUS: " + authorized);
+    logger.info("AUTH STATUS: " + authorized);
 
     if(authorized !== true){
     return res.status(403).send("Refresh request failed. UNAUTHORIZED DEVICE");
