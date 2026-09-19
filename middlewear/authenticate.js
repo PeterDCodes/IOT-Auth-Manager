@@ -30,6 +30,7 @@ export const createAuthenticate = ({
   }
 
   return (req, res, next) => {
+    //Checks incomming request for bearer token header
     const authorization = req.headers.authorization
     const match = authorization?.match(/^Bearer ([^\s]+)$/i)
 
@@ -39,6 +40,7 @@ export const createAuthenticate = ({
       })
     }
 
+    //Verify the token against the key
     try {
       req.auth = jwt.verify(match[1], verificationKey, {
         algorithms: [algorithm],
@@ -48,6 +50,7 @@ export const createAuthenticate = ({
 
       return next()
     } catch {
+        //Raise 401 if token not valid
       return res.status(401).json({
         error: "Invalid or expired access token"
       })
@@ -57,7 +60,9 @@ export const createAuthenticate = ({
 
 let defaultAuthenticate
 
+
 export const authenticate = (req, res, next) => {
+
   if (!defaultAuthenticate) {
     const settings = getTokenSettings()
     defaultAuthenticate = createAuthenticate({

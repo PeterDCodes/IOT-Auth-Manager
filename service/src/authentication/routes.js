@@ -56,6 +56,7 @@ router.post("/refresh", async(req, res)=>{
     //Validate the token
     const authorized = await validateClientSecret(cd_device, secret);
 
+    //TODO - Set up formal logging feature
     console.log("AUTH STATUS: " + authorized);
 
     if(authorized !== true){

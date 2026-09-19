@@ -18,6 +18,7 @@ app.get("/", (req, res) => {
   res.send("IOT-AUTH-SERVER");
 });
 
+
 //Use authentication routes
 app.use("/auth", authRoutes)
 
@@ -28,6 +29,7 @@ app.use("/devices", deviceRoutes)
 app.use(function(req, res, next) {
   res.status(404).send("Route not found");
  });
+
 
 const startServer=async()=>{
   try {
@@ -41,5 +43,6 @@ const startServer=async()=>{
     process.exitCode = 1
   }
 }
+
 
 await startServer()
