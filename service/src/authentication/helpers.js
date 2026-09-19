@@ -3,6 +3,22 @@ import jwt from "jsonwebtoken"
 import * as fs from 'node:fs'; 
 
 
+/**
+ * Checks and returns private key
+ */
+export const getPrivateKey=(environment=process.env)=>{
+  try{
+    const privateKey = fs.readFileSync(
+      process.env.JWT_PRIVATE_KEY_PATH,
+      "utf8"
+    )
+    return privateKey
+  }catch(error){
+    throw new Error(`Missing Private Key: ${error}\nDid you run 'make keys'?`)
+  }
+
+}
+
 
 /**
  * Reads env file and returns token settings
@@ -16,31 +32,26 @@ const getTokenSettings=(environment)=>{
     algorithm: null,
     issuer: null,
     audience: null,
-    expiresIn: null
+    expires_in: null
   }
-
-
   //Try to get all values from env
   //TODO - set this up to be modified as needed with env
   try{
     //Get Key
-    const privateKey = fs.readFileSync(
-      process.env.JWT_PRIVATE_KEY_PATH,
-      "utf8"
-    )
-
+    const privateKey = getPrivateKey()
     tokenSettings.signingKey = privateKey
+    //Get Rest of token settings
     tokenSettings.algorithm = "RS256"
-    tokenSettings.issuer = "PETER-TEMP"
-    tokenSettings.audience = "IDK what this is"
-    tokenSettings.expiresIn = environment.EXPIRES_IN
+    tokenSettings.token_type = "Bearer"
+    tokenSettings.issuer = environment.ISSUER
+    tokenSettings.audience = environment.AUDIENCE
+    tokenSettings.expires_in = environment.EXPIRES_IN
   }catch(error){
     console.log("Missing Required Settings value: " + error);
   }
 
   //TODO - need my error handling cleaned up for end users calling the api
   return tokenSettings;
-
 }
 
 
@@ -88,10 +99,11 @@ export const signAccessToken = (cdDevice, environment = process.env) => {
       issuer: settings.issuer,
       audience: settings.audience,
       subject: String(cdDevice),
-      expiresIn: settings.expiresIn
+      expires_in: settings.expires_in
     }
   )
 }
+
 
 
 
@@ -102,17 +114,17 @@ export const signAccessToken = (cdDevice, environment = process.env) => {
  */
 export const buildCredential=(cd_device)=>{
 
+    //Read Settings
+    const { token_type, expires_in } = getTokenSettings(process.environment)
+
     //create a Signed JWT credential to return to the client
     const access_token = signAccessToken(cd_device)
-    const token_type = "Bearer"
-    //TODO - replace this with the value read from settings
-    const { expiresIn } = "15m"
     
     //Returned back to a valid device.
     const credential = {
         "access_token": access_token,
         "token_type": token_type,
-        "expires_in": expiresIn
+        "expires_in": expires_in
     };
 
     return credential;

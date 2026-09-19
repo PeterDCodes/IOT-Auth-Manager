@@ -2,6 +2,7 @@ import express from "express"
 import cors from "cors"
 import deviceRoutes from "./devices/routes.js"
 import database, { verifyDatabaseConnection } from "./data/database.js"
+import { getPrivateKey } from "./authentication/helpers.js"
 
 //Import Auth Library
 import { authRoutes } from "./authentication/index.js"
@@ -33,12 +34,16 @@ app.use(function(req, res, next) {
 
 const startServer=async()=>{
   try {
+    //Check DB Connection
     await verifyDatabaseConnection()
+    //Check Keys
+    const privateKey = getPrivateKey()
+
     app.listen(port, () => {
       console.log(`AUTH Service listening on port ${port}`);
     });
   } catch (error) {
-    console.error(`Failed to connect to PostgreSQL: ${error.message}`)
+    console.error(`Failed to launch Auth service: ${error.message}`)
     await database.end()
     process.exitCode = 1
   }
