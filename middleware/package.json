@@ -1,0 +1,15 @@
+{
+  "name": "auth-middleware",
+  "version": "1.0.0",
+  "description": "Standard auth middleware helper for use with IOT-AUTH-MANAGER",
+  "license": "ISC",
+  "author": "Peter Driscol",
+  "type": "module",
+  "main": "authenticate.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3"
+  }
+}
