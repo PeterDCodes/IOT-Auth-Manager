@@ -35,6 +35,7 @@ app.use(function(req, res, next) {
 
 
 const startServer=async()=>{
+  
   try {
     //Check DB Connection
     await verifyDatabaseConnection()

@@ -2,7 +2,7 @@
 FROM node:22-alpine
 
 # 2. Set the working directory inside the container
-WORKDIR /src
+WORKDIR /app
 
 # 3. Copy your project files from your computer into the container
 COPY . .
