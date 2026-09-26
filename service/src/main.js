@@ -1,15 +1,18 @@
 import express from "express"
 import cors from "cors"
-import deviceRoutes from "./devices/routes.js"
 import database, { verifyDatabaseConnection } from "./data/database.js"
-import { getPrivateKey, getPublicKey } from "./authentication/helpers.js"
 import logger from "./utils/logging.js"
 
 //Import the middleware helper from package as a demo of how used
 import createAuthenticate from "auth-middleware"
 
-//Import Auth Library
+//Import Routes and supporting endpoints
 import { authRoutes } from "./authentication/index.js"
+import { deviceRoutes }  from "./devices/index.js"
+import { metaRoutes } from "./metadata/index.js"
+
+//Keys Helpers
+import { getPrivateKey } from "../keys/helpers.js"
 
 
 const app = express();
@@ -24,10 +27,10 @@ app.get("/", (req, res) => {
   res.send("IOT-AUTH-SERVER");
 });
 
-
+//Use JWKS route
+app.use("/.well-known", metaRoutes)
 //Use authentication routes
 app.use("/auth", authRoutes)
-
 //Use device routes
 app.use("/devices", deviceRoutes)
 
@@ -63,7 +66,7 @@ const startServer=async()=>{
     getPrivateKey()
     //Check DB Connection
     await verifyDatabaseConnection()
-    
+
     app.listen(port, () => {
       console.log(`AUTH Service listening on port ${port}`);
       logger.info(`AUTH Service listening on port ${port}`);

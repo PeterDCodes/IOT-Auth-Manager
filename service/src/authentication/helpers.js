@@ -3,38 +3,7 @@ import jwt from "jsonwebtoken"
 import * as fs from 'node:fs'; 
 import logger from "../utils/logging.js"
 
-/**
- * Checks and returns private key
- */
-export const getPrivateKey=(environment=process.env)=>{
-  try{
-    const privateKey = fs.readFileSync(
-      process.env.JWT_PRIVATE_KEY_PATH,
-      "utf8"
-    )
-    return privateKey
-  }catch(error){
-    throw new Error(`Missing Private Key. Did you run 'make keys'?`)
-  }
-}
-
-
-/**
- * Checks and returns a general public key
- */
-export const getPublicKey=(environment=process.env)=>{
-  try{
-    const publicKey = fs.readFileSync(
-      process.env.JWT_PUBLIC_KEY_PATH,
-      "utf8"
-    )
-    return publicKey
-  }catch(error){
-    throw new Error(`Missing Public Key. Did you run 'make keys'?`)
-  }
-}
-
-
+import { getPrivateKey, getPublicKey } from "../../keys/helpers.js"
 
 /**
  * Reads env file and returns token settings
