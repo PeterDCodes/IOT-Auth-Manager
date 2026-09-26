@@ -11,6 +11,7 @@ import createAuthenticate from "auth-middleware"
 //Import Auth Library
 import { authRoutes } from "./authentication/index.js"
 
+
 const app = express();
 const port = 3001;
 
@@ -34,37 +35,22 @@ app.use("/devices", deviceRoutes)
 
 
 
-
-//Configure authentication
-const publicKey = getPublicKey()
-const algorithm = "RS256"
-const issuer = "IOT-AUTH-MANAGER"
-const audience = "IOT-APIS"
-const authenticate = (req, res, next) => {
-  let defaultAuthenticate;
-  if (!defaultAuthenticate) {
-    defaultAuthenticate = createAuthenticate({
-      publicKey,
-      algorithm,
-      issuer,
-      audience
-    })
-  }
-  return defaultAuthenticate(req, res, next)
-}
+// //DEMO OF USING THE MIDDLEWEAR with a public key
+// const publicKey = getPublicKey()
+// const issuer = "PETERS-AUTH-MANAGER"
+// const audience = "PETERS-OFFICIAL-SERVICES"
+// const authenticate = createAuthenticate({
+//       publicKey,
+//       issuer,
+//       audience
+// })
+// // Test Middlewear
+// app.get("/protected", authenticate, (req, res)=>{
+//   res.send("PROTECTED ROUTE")
+// })
 
 
-
-
-
-// Test Middlewear
-app.get("/protected", authenticate, (req, res)=>{
-  res.send("PROTECTED ROUTE")
-})
-
-
-
-// Catch any random/unhandled route (404 handler)
+//Catch any random/unhandled route (404 handler)
 app.use(function(req, res, next) {
   res.status(404).send("Route not found");
  });
@@ -72,12 +58,12 @@ app.use(function(req, res, next) {
 
 const startServer=async()=>{
   
-  try {
+  try{
+    //Confirm Key status
+    getPrivateKey()
     //Check DB Connection
     await verifyDatabaseConnection()
-    //Check Keys
-    const privateKey = getPrivateKey()
-
+    
     app.listen(port, () => {
       console.log(`AUTH Service listening on port ${port}`);
       logger.info(`AUTH Service listening on port ${port}`);

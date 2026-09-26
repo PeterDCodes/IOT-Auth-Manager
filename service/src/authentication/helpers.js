@@ -14,13 +14,13 @@ export const getPrivateKey=(environment=process.env)=>{
     )
     return privateKey
   }catch(error){
-    throw new Error(`Missing Private Key: ${error}\nDid you run 'make keys'?`)
+    throw new Error(`Missing Private Key. Did you run 'make keys'?`)
   }
 }
 
 
 /**
- * Checks and returns public key
+ * Checks and returns a general public key
  */
 export const getPublicKey=(environment=process.env)=>{
   try{
@@ -30,7 +30,7 @@ export const getPublicKey=(environment=process.env)=>{
     )
     return publicKey
   }catch(error){
-    throw new Error(`Missing Public Key: ${error}\nDid you run 'make keys'?`)
+    throw new Error(`Missing Public Key. Did you run 'make keys'?`)
   }
 }
 

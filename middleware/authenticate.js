@@ -28,7 +28,7 @@ export const createAuthenticate = ({
       })
     }
 
-    //Verify the token against the key
+    //Verify the full JWT and its content.
     try {
       req.auth = jwt.verify(match[1], publicKey, {
         algorithms: [algorithm],
