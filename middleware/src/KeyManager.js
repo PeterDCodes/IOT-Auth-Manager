@@ -1,5 +1,6 @@
 import { writeFile, readFile } from 'node:fs/promises';
 import axios from "axios";
+import crypto from "crypto"
 
 
 /**
@@ -51,7 +52,7 @@ export class KeyManager {
         const response = await axios.get(this.#endpoint);
         const {keys} = response.data;
         //Returns a single key
-        return keys
+        return keys[0]
     }
     
     //Check if Key is present or not
@@ -78,7 +79,9 @@ export class KeyManager {
 
         const key = await this.getKey()
 
+
         const publicKey = crypto.createPublicKey({
+            //Uses first element of the list of keys. In future would need to fix if many jwks are given by server API
             key: key,
             format: "jwk"
         })
@@ -98,7 +101,6 @@ export class KeyManager {
             return publicKey
         }catch(error){
             throw new Error(`Failed to fetch and store target jwks: ${error.message}`)
-            
         }
     }
 

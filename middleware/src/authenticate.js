@@ -38,7 +38,7 @@ export const createAuthenticate = ({
       })
 
       return next()
-    } catch {
+    } catch(error) {
         //Raise 401 if token not valid
       return res.status(401).json({
         error: "Invalid or expired access token"

@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken"
 import * as fs from 'node:fs'; 
 import logger from "../utils/logging.js"
 
-import { getPrivateKey, getPublicKey } from "../../keys/helpers.js"
+import { getPrivateKey } from "../../keys/helpers.js"
 
 /**
  * Reads env file and returns token settings
