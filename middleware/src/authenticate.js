@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken"
 
 
+
 //Configures the authentication middlewear function
 export const createAuthenticate = ({
   publicKey,
