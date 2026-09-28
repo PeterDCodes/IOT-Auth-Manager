@@ -7,6 +7,12 @@ services:
     environment:
       NODE_ENV: production
 
+  # Recommended to mount your keys in a volume
+    # volumes:
+    #   - /home/you/Secrets/IOT-AUTH-MANAGER/private.pem:/keys/private.pem:ro
+    #   - /home/you/Secrets/IOT-AUTH-MANAGER/public.pem:/keys/public.pem:ro
+
+
     
 
     env_file:
