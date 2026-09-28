@@ -21,6 +21,8 @@ const startServer=async()=>{
       const keyManager = new KeyManager(STOREPATH, JWKS_ENDPOINT)
       //Fetch and store then use the public key
       const publicKey = await keyManager.fetchAndStore()
+
+      //I only want to accept tokens issued by Peters Auth Manager and I only want tokens that are meant for Peters Official Services
       const issuer = "PETERS-AUTH-MANAGER"
       const audience = "PETERS-OFFICIAL-SERVICES"
       const authenticate = createAuthenticate({

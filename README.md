@@ -1,152 +1,116 @@
-A PostgreSQL-backed device registration service intended for mobile devices that are not tied to a specific user or account.
+# IOT Auth Manager
 
-It provides device registration, secret-based access-token refresh, an Axios authentication client, and reusable Express middleware for authenticated API calls.
-
-## Authentication flow
-
-1. A device registers once through `POST /auth/register` and securely stores the returned device secret.
-2. The device exchanges its database-generated `cd_device` and secret through `POST /auth/refresh` for a short-lived JWT access token.
-3. The device sends that token to an API as `Authorization: Bearer ACCESS_TOKEN`.
-4. The API verifies the JWT locally with the `clientregister/express` middleware. It does not query the authentication database on every request.
+PostgreSQL-backed device authentication using RS256 JWTs. The auth service signs tokens with its private key; APIs verify them with the published public key.
 
 ## Setup
 
-1. Copy `.env-sample` to `.env` and set the PostgreSQL, JWT, and registration values.
-2. Create the database named by `PGDATABASE` and grant access to `PGUSER`.
-3. Run `npm run seed` to create the `devices` table.
-4. Run `npm start` to start the service at `http://localhost:3000`.
-
-The seed is idempotent and creates only the schema. Register devices through `POST /auth/register`.
-
-## PostgreSQL verification
-
-Run the seed twice to verify that schema creation is repeatable:
+From `service/`:
 
 ```sh
+cp .env-sample .env
+./keys/makeKeys.sh
+npm install
 npm run seed
-npm run seed
+npm start
 ```
 
-After starting the service, verify registration and token refresh:
+Set `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `JWT_PRIVATE_KEY_PATH`, `JWT_PUBLIC_KEY_PATH`, `EXPIRES_IN`, `ISSUER`, and `AUDIENCE` in `.env`. `REGISTRATION_CODE` is optional.
 
-```sh
-curl -X POST http://localhost:3000/auth/register \
-  -H 'Content-Type: application/json' \
-  -H 'x-registration-code: YOUR_REGISTRATION_CODE' \
-  -d '{"name":"Test Device","serial":"TEST-001","mac_addr":"00:00:00:00:00:01","device_ip":"127.0.0.1"}'
+The service runs at `http://localhost:3000`.
 
-curl -X POST http://localhost:3000/auth/refresh \
-  -H 'Content-Type: application/json' \
-  -d '{"cd_device":1,"secret":"SECRET_RETURNED_BY_REGISTER"}'
+## Authentication contract
+
+1. Register a device and retain its `cd_device` and `secret`.
+2. Send those credentials to `/auth/refresh` to receive an RS256 access token.
+3. Send the token to protected APIs as `Authorization: Bearer <access_token>`.
+
+The token contains `cd_device`, `sub`, `iss`, `aud`, `iat`, and `exp`. APIs must verify the RS256 signature, issuer, audience, and expiry.
+
+## Routes
+
+### `GET /`
+
+Returns `200` with `IOT-AUTH-SERVER` as plain text.
+
+### `POST /auth/register`
+
+Request body:
+
+```json
+{
+  "name": "Sensor 1",
+  "serial": "SN-001",
+  "mac_addr": "00:00:00:00:00:01",
+  "device_ip": "192.0.2.10"
+}
 ```
 
-`GET /devices` is public and excludes stored secret hashes. `GET /secret` requires the bearer access token returned by the refresh request.
+If `REGISTRATION_CODE` is set, include it in the `x-registration-code` header.
 
-`REGISTRATION_CODE` is optional for backward compatibility. When it is configured, registration requests must send the matching `x-registration-code` header. Configure it outside local experiments so unknown devices cannot enroll themselves.
+Returns `200`:
 
-## Use in another Express API
-
-Install the package from the local sibling directory while developing:
-
-```sh
-npm install ../clientRegister
+```json
+{
+  "message": "Device successfully Registered!",
+  "cd_device": 1,
+  "secret": "device-secret"
+}
 ```
 
-Create the middleware once, then mount it on the routes that should be protected:
+Returns `400` for missing fields or `403` for an invalid registration code.
+
+### `POST /auth/refresh`
+
+Request body:
+
+```json
+{ "cd_device": 1, "secret": "device-secret" }
+```
+
+Returns `200`:
+
+```json
+{
+  "access_token": "eyJ...",
+  "token_type": "Bearer",
+  "expires_in": "15m"
+}
+```
+
+Returns `400` for missing credentials or `403` when the device is unknown, inactive, or the secret is invalid.
+
+### `GET /devices`
+
+Returns `200` with an array of devices. Each device contains `cd_device`, `name`, `serial`, `mac_addr`, `device_ip`, `dt_created`, `dt_modified`, and `active`. Secret hashes are not returned.
+
+### `GET /devices/:cd_device`
+
+Returns `200` with one device in the same shape, or `404` if it does not exist.
+
+### `GET /.well-known/jwks.json`
+
+Returns `200` with the RS256 public key as a JSON Web Key Set. The key has `kid: "auth-key-1"`, `use: "sig"`, and `alg: "RS256"`.
+
+All other routes return `404`.
+
+## Express middleware
+
+Fetch the public key and use the same issuer and audience configured on the auth service:
 
 ```js
-import express from "express"
-import { createAuthenticate } from "clientregister/express"
+import { KeyManager, createAuthenticate } from "auth-middleware"
 
-const app = express()
-
+const keys = new KeyManager("./", "http://localhost:3000/.well-known/jwks.json")
+const publicKey = await keys.fetchAndStore()
 const authenticate = createAuthenticate({
-  secret: process.env.JWT_SECRET,
-  issuer: process.env.JWT_ISSUER ?? "client-register",
-  audience: process.env.JWT_AUDIENCE ?? "device-apis"
+  publicKey,
+  issuer: process.env.ISSUER,
+  audience: process.env.AUDIENCE
 })
 
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" })
+app.get("/protected", authenticate, (req, res) => {
+  res.json({ cd_device: req.auth.cd_device })
 })
-
-app.use("/api", authenticate)
-
-app.get("/api/orders", (req, res) => {
-  res.json({
-    cd_device: req.auth.cd_device,
-    orders: []
-  })
-})
-
-app.listen(4000)
 ```
 
-`/health` remains public. Every route under `/api` requires a valid token. A successful check places the verified JWT payload on `req.auth`.
-
-The HS256 setup above preserves the original shared-secret behavior. Every API with `JWT_SECRET` can also create valid tokens, so RS256 is recommended when the auth service and protected APIs are separate applications.
-
-## Recommended RS256 setup
-
-Generate a private/public key pair:
-
-```sh
-openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
-openssl rsa -pubout -in private.pem -out public.pem
-```
-
-Do not commit `private.pem`. Configure the authentication service with:
-
-```dotenv
-JWT_ALGORITHM=RS256
-JWT_PRIVATE_KEY_PATH=./private.pem
-JWT_PUBLIC_KEY_PATH=./public.pem
-JWT_ISSUER=client-register
-JWT_AUDIENCE=device-apis
-EXPIRES_IN=15m
-```
-
-Each protected Express API receives only `public.pem`:
-
-```js
-import fs from "node:fs"
-import { createAuthenticate } from "clientregister/express"
-
-const authenticate = createAuthenticate({
-  publicKey: fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH, "utf8"),
-  issuer: "client-register",
-  audience: "device-apis"
-})
-
-app.use("/api", authenticate)
-```
-
-The public key verifies tokens but cannot sign new ones. The issuer, audience, and allowed algorithm are also checked for every request.
-
-## Client usage
-
-<img width="103" height="227" alt="image" src="https://github.com/user-attachments/assets/00ef556d-c920-4d89-b654-735612ec8483" />
-
-The default package export remains the Axios client used by browser or device applications:
-
-```js
-import { AuthClient } from "clientregister"
-
-const authClient = new AuthClient({
-  authBaseURL: "http://localhost:3000",
-  apiBaseURL: "http://localhost:4000",
-  storage: secureDeviceStorage
-})
-
-await authClient.register(device, {
-  registrationCode: codeEnteredByUser
-})
-
-const response = await authClient.http.get("/api/orders")
-```
-
-The client stores the permanent device secret through the supplied storage implementation, requests tokens from `authBaseURL`, sends API requests to `apiBaseURL`, attaches Bearer tokens, and retries once after a `401` response. The original `baseURL` option still sets both URLs when the auth routes and API share one server.
-
-## Authentication and authorization
-
-The middleware authenticates a device. Route-specific permission checks still belong in the protected API. Return `401` for a missing or invalid token and `403` when an authenticated device lacks permission for an operation.
+Missing, invalid, or expired bearer tokens return `401`. Verified claims are available as `req.auth`.
