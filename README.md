@@ -2,6 +2,8 @@
 
 PostgreSQL-backed device authentication using RS256 JWTs. The auth service signs tokens with its private key; APIs verify them with the published public key.
 
+<img width="2312" height="1284" alt="image" src="https://github.com/user-attachments/assets/ffdfdf13-ab05-4170-8954-ca1804a8ee55" />
+
 ## Setup
 
 From `service/`:
@@ -23,6 +25,8 @@ The service runs at `http://localhost:3000`.
 1. Register a device and retain its `cd_device` and `secret`.
 2. Send those credentials to `/auth/refresh` to receive an RS256 access token.
 3. Send the token to protected APIs as `Authorization: Bearer <access_token>`.
+
+<img width="2474" height="1062" alt="image" src="https://github.com/user-attachments/assets/1815f437-4f49-40f9-90fc-82de74ad82dc" />
 
 The token contains `cd_device`, `sub`, `iss`, `aud`, `iat`, and `exp`. APIs must verify the RS256 signature, issuer, audience, and expiry.
 
@@ -92,6 +96,8 @@ Returns `200` with one device in the same shape, or `404` if it does not exist.
 Returns `200` with the RS256 public key as a JSON Web Key Set. The key has `kid: "auth-key-1"`, `use: "sig"`, and `alg: "RS256"`.
 
 All other routes return `404`.
+
+<img width="2488" height="814" alt="image" src="https://github.com/user-attachments/assets/50b30d15-e84e-4965-bf40-386dc6a6c973" />
 
 ## Express middleware
 
