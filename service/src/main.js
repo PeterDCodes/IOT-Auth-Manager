@@ -11,13 +11,15 @@ import { metaRoutes } from "./metadata/index.js"
 //Keys Helpers
 import { getPrivateKey } from "../keys/helpers.js"
 
+import pinoHttp from "pino-http";
+
 
 
 const app = express();
 const port = 3000;
 app.use(cors());
 app.use(express.json());
-
+app.use(pinoHttp())
 
 //UNPROTECTED ROUTES
 app.get("/", (req, res) => {
@@ -49,7 +51,6 @@ const startServer=async()=>{
 
     app.listen(port, () => {
       console.log(`AUTH Service listening on port ${port}`);
-      logger.info(`AUTH Service listening on port ${port}`);
     });
   } catch (error) {
     logger.error(`Failed to launch Auth service: ${error.message}`)

@@ -5,4 +5,6 @@ node_modules/
 
 *.pem
 
-jwks.json
+
+middleware/jwks.json
+middleware/jwks.json
