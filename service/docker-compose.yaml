@@ -6,14 +6,12 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      JWT_PRIVATE_KEY_PATH: /keys/private.pem
+      JWT_PUBLIC_KEY_PATH: /keys/public.pem
 
-  # Recommended to mount your keys in a volume
-    # volumes:
-    #   - /home/you/Secrets/IOT-AUTH-MANAGER/private.pem:/keys/private.pem:ro
-    #   - /home/you/Secrets/IOT-AUTH-MANAGER/public.pem:/keys/public.pem:ro
-
-
-    
+    volumes:
+      - /home/ultra/Secrets/IOT-AUTH-MANAGER/private.pem:/keys/private.pem:ro
+      - /home/ultra/Secrets/IOT-AUTH-MANAGER/public.pem:/keys/public.pem:ro
 
     env_file:
       - .env
