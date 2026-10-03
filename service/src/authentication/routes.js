@@ -11,6 +11,11 @@ const router = express.Router();
 //A route used to send a regstration request
 router.post("/register", async (req, res) => {
 
+  req.log.info({
+    event: "DEVICE-REGISTRATION-REQUEST",
+  });
+
+
   //If defined in the settings then payload should include registation code
   if (process.env.REGISTRATION_CODE && req.get("x-registration-code") !== process.env.REGISTRATION_CODE) {
     return res.status(403).json({
@@ -27,14 +32,18 @@ router.post("/register", async (req, res) => {
   }
 
   //Initiate the registration
-  const { cd_device, secret } = await registerNewDevice(register)
+  try{
+    const { cd_device, secret } = await registerNewDevice(register)
 
-  //Return the registration key back to the client
-  return res.status(200).json({
-    "message": "Device successfully Registered!",
-    "cd_device": cd_device,
-    "secret": secret
-  });
+    //Return the registration key back to the client
+    return res.status(200).json({
+      "message": "Device successfully Registered!",
+      "cd_device": cd_device,
+      "secret": secret
+    });
+  }catch(error){
+    return res.status(400).send(error.cause?.message ?? error.message)
+  }
 });
 
 //Request a JWT from auth service

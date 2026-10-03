@@ -1,6 +1,7 @@
 import database from "./database.js"
 import crypto from "crypto"
 import bcrypt from "bcrypt"
+import { validateDevice } from "../helpers.js"
 
 const SALT_ROUNDS = 12
 
@@ -14,6 +15,10 @@ const SALT_ROUNDS = 12
  */
 export const registerNewDevice=async({name, serial, mac_addr, device_ip})=>{
   try {
+
+    //Input Validation
+    await validateDevice(name, serial, mac_addr, device_ip)
+
     const key = makeKey()
     const hashed_key = await makeHash(key)
     const cd_device = await addDevice(name, serial, mac_addr, device_ip, hashed_key)
@@ -54,6 +59,34 @@ export const getDeviceById=async(cd_device)=>{
     FROM devices
     WHERE cd_device = $1
   `, [cd_device])
+
+  return result.rows[0]
+}
+
+/**
+ * Query and return an active device with that serial
+ */
+export const getDeviceBySerial=async(serial)=>{
+  const result = await database.query(`
+    SELECT *
+    FROM devices
+    WHERE serial = $1
+    AND active = true
+  `, [serial])
+
+  return result.rows[0]
+}
+
+/**
+ * Query and return an active device with that serial
+ */
+export const getDeviceByName=async(name)=>{
+  const result = await database.query(`
+    SELECT *
+    FROM devices
+    WHERE name ilike $1
+    AND active = true
+  `, [name])
 
   return result.rows[0]
 }
