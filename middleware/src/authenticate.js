@@ -67,7 +67,6 @@ export const createAuthenticate = ({
       return next()
 
     } catch(error) {
-      console.log(error)
       //Raise 401 if token not valid
       const msg = "Invalid or expired access token"
       logReq({

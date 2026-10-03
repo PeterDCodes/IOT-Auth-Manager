@@ -4,6 +4,11 @@ import { getDevices, getPublicDeviceById } from "../data/devices.js"
 const router = express.Router();
 
 router.get("/", async(req, res) => {
+
+  req.log.info({
+    event: "DEVICE-LIST-REQUEST",
+  });
+
   const devices = await getDevices();
   return res.json(devices)
 });
