@@ -14,7 +14,6 @@ import { getPrivateKey } from "../keys/helpers.js"
 import pinoHttp from "pino-http";
 
 
-
 const app = express();
 const port = 3000;
 app.use(cors());

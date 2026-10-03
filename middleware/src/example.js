@@ -20,6 +20,7 @@ const startServer=async()=>{
       const JWKS_ENDPOINT = "http://localhost:3000/.well-known/jwks.json"
       const keyManager = new KeyManager(STOREPATH, JWKS_ENDPOINT)
       //Fetch and store then use the public key
+      //TODO - add logic so the keymanager will first check if keys are available before getting new one
       const publicKey = await keyManager.fetchAndStore()
 
       //I only want to accept tokens issued by Peters Auth Manager and I only want tokens that are meant for Peters Official Services
