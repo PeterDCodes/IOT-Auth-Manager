@@ -1,7 +1,7 @@
 //AUTH Routes
 import express from "express"
 import { registerNewDevice } from "../devices/data.js"
-import { buildCredential, validateClientSecret } from "./helpers.js"
+import { buildCredential, validateClientSecret, validateRefresh } from "./helpers.js"
 import logger from "../../utils/logging.js"
 
 
@@ -46,21 +46,17 @@ router.post("/register", async (req, res) => {
   }
 });
 
-//Request a JWT from auth service
+//Request a JWT for an authorized device
 router.post("/refresh", async(req, res)=>{
 
+    try {
+      validateRefresh(req.body)
+    } catch (error) {
+      return res.status(400).send(error.message)
+    }
+
     //Check the body for the database-generated device code and secret
-    const {cd_device, secret} = req.body ?? {}
-
-    //Check if cd_device was sent
-    if(cd_device == null){
-    return res.status(400).send("Refresh request failed. res body must include cd_device")
-    }
-
-    //Check if key was sent
-    if(!secret){
-    return res.status(400).send("Refresh request failed. res body must include secret")
-    }
+    const {cd_device, secret} = req.body
 
     //Validate the token
     const authorized = await validateClientSecret(cd_device, secret);

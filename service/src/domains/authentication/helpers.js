@@ -5,6 +5,21 @@ import logger from "../../utils/logging.js"
 
 import { getPrivateKey } from "../../../keys/helpers.js"
 
+export const validateRefresh = (body) => {
+  if (!body || Array.isArray(body) || Object.keys(body).length !== 2 ||
+      !("cd_device" in body) || !("secret" in body)) {
+    throw new Error("Refresh request body must only include cd_device and secret")
+  }
+
+  if (!Number.isInteger(body.cd_device)) {
+    throw new Error("cd_device must be an integer")
+  }
+
+  if (typeof body.secret !== "string" || !/^[a-f0-9]{64}$/.test(body.secret)) {
+    throw new Error("secret must be a valid secret")
+  }
+}
+
 /**
  * Reads env file and returns token settings
  * @param environment process.env file

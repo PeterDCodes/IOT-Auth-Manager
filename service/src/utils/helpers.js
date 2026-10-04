@@ -16,8 +16,8 @@ export const validateDevice=async (name, serial, mac_addr, device_ip)=>{
 const checkName=async(name)=>{
     //Get device bny name. I dont want duplicates
     //throw error if a value came back becaus eI do not wnt duplicated names case insensitive
-    if(typeof name !== "string" || !/^[a-zA-Z0-9]+$/.test(name)){
-        throw new Error("Device name must only contain letters and numbers")
+    if(typeof name !== "string" || !/^[a-zA-Z0-9-_]+$/.test(name)){
+        throw new Error("Device name must follow required format")
     }
 
     const device = await getDeviceByName(name)
