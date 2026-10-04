@@ -1,5 +1,5 @@
 import crypto from "crypto"
-import { getPublicKey } from "../../keys/helpers.js"
+import { getPublicKey } from "../../../keys/helpers.js"
 
 
 //Packages public key into a standard jwks for distribution

@@ -1,5 +1,5 @@
 import express from "express"
-import { getDevices, getPublicDeviceById } from "../data/devices.js"
+import { getDevices, getPublicDeviceById } from "./data.js"
 
 const router = express.Router();
 

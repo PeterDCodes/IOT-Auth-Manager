@@ -1,8 +1,8 @@
 //AUTH Routes
 import express from "express"
-import { registerNewDevice } from "../data/devices.js"
+import { registerNewDevice } from "../devices/data.js"
 import { buildCredential, validateClientSecret } from "./helpers.js"
-import logger from "../utils/logging.js"
+import logger from "../../utils/logging.js"
 
 
 const router = express.Router();

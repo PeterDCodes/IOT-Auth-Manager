@@ -4,9 +4,9 @@ import database, { verifyDatabaseConnection } from "./data/database.js"
 import logger from "./utils/logging.js"
 
 //Import Routes and supporting endpoints
-import { authRoutes } from "./authentication/index.js"
-import { deviceRoutes }  from "./devices/index.js"
-import { metaRoutes } from "./metadata/index.js"
+import { authRoutes } from "./domains/authentication/index.js"
+import { deviceRoutes }  from "./domains/devices/index.js"
+import { metaRoutes } from "./domains/metadata/index.js"
 
 //Keys Helpers
 import { getPrivateKey } from "../keys/helpers.js"

@@ -1,7 +1,7 @@
-import database from "./database.js"
+import database from "../../data/database.js"
 import crypto from "crypto"
 import bcrypt from "bcrypt"
-import { validateDevice } from "../helpers.js"
+import { validateDevice } from "../../utils/helpers.js"
 
 const SALT_ROUNDS = 12
 

@@ -1,4 +1,4 @@
-import { getDeviceBySerial, getDeviceByName } from "./data/devices.js"
+import { getDeviceBySerial, getDeviceByName } from "../domains/devices/data.js"
 import { isIP } from "node:net"
 
 export const validateDevice=async (name, serial, mac_addr, device_ip)=>{
