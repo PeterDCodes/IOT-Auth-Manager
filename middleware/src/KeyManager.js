@@ -49,25 +49,35 @@ export class KeyManager {
 
     //FetchKey from API
     async fetchKey(){
-        const response = await axios.get(this.#endpoint);
-        const {keys} = response.data;
-        //Returns a single key
-        return keys[0]
+        try{
+            const response = await axios.get(this.#endpoint);
+            const keys = response.data?.keys;
+
+            if(!Array.isArray(keys) || keys.length === 0){
+                throw new Error("Endpoint returned no public keys")
+            }
+
+            //Returns a single key
+            return keys[0]
+        }catch(error){
+            throw new Error("Failed to fetch public key", { cause: error })
+        }
     }
     
     //Check if Key is present or not
     async getKey(){
-        //If the JSON file exists at path then true else false
-        const data = await readFile(
-            this.#storepath + this.FILENAME, "utf-8"
-        )
+        try{
+            const data = await readFile(
+                this.#storepath + this.FILENAME, "utf-8"
+            )
 
-        const jwk = JSON.parse(data);
+            return JSON.parse(data);
+        }catch(error){
+            if(error.code === "ENOENT"){
+                return null
+            }
 
-        if(jwk == null){
-            return null
-        }else{
-            return jwk
+            throw new Error("Failed to read stored public key", { cause: error })
         }
     }
 
@@ -78,7 +88,6 @@ export class KeyManager {
     async givePublicKey(){
 
         const key = await this.getKey()
-
 
         const publicKey = crypto.createPublicKey({
             //Uses first element of the list of keys. In future would need to fix if many jwks are given by server API
@@ -95,12 +104,20 @@ export class KeyManager {
     async fetchAndStore(){
 
         try{
-            const keys = await this.fetchKey();
-            await this.storeKey(keys);
-            const publicKey = await this.givePublicKey()
-            return publicKey
+            let key = await this.getKey();
+
+            if(key === null){
+                key = await this.fetchKey();
+                await this.storeKey(key);
+            }
+
+            return crypto.createPublicKey({
+                key,
+                format: "jwk"
+            })
+
         }catch(error){
-            throw new Error(`Failed to fetch and store target jwks: ${error.message}`)
+            throw new Error("Failed to obtain public key", { cause: error })
         }
     }
 
