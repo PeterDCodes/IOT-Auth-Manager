@@ -1,6 +1,6 @@
 //AUTH Routes
 import express from "express"
-import { registerNewDevice } from "../devices/data.js"
+import { registerNewDevice, updateLastRefresh } from "../devices/data.js"
 import { buildCredential, validateClientSecret, validateRefresh } from "./helpers.js"
 import logger from "../../utils/logging.js"
 
@@ -70,6 +70,7 @@ router.post("/refresh", async(req, res)=>{
 
     //Build and return credential to client
     const credential = buildCredential(cd_device)
+    await updateLastRefresh(cd_device)
     return res.status(200).json(credential)
 
 });

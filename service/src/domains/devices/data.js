@@ -91,10 +91,19 @@ export const getDeviceByName=async(name)=>{
   return result.rows[0]
 }
 
+//Record when a device was last issued an access token
+export const updateLastRefresh=async(cd_device)=>{
+  await database.query(`
+    UPDATE devices
+    SET last_refresh = CURRENT_TIMESTAMP
+    WHERE cd_device = $1
+  `, [cd_device])
+}
+
 //Method to query a single device without exposing its secret hash
 export const getPublicDeviceById=async(cd_device)=>{
   const result = await database.query(`
-    SELECT cd_device, name, serial, mac_addr, device_ip, dt_created, dt_modified, active
+    SELECT cd_device, name, serial, mac_addr, device_ip, dt_created, dt_modified, last_refresh, active
     FROM devices
     WHERE cd_device = $1
   `, [cd_device])
@@ -105,7 +114,7 @@ export const getPublicDeviceById=async(cd_device)=>{
 //Method to query all devices without exposing secret hashes
 export const getDevices=async()=>{
   const result = await database.query(`
-    SELECT cd_device, name, serial, mac_addr, device_ip, dt_created, dt_modified, active
+    SELECT cd_device, name, serial, mac_addr, device_ip, dt_created, dt_modified, last_refresh, active
     FROM devices
     ORDER BY cd_device
   `)

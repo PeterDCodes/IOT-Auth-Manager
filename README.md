@@ -85,7 +85,7 @@ Returns `400` for missing credentials or `403` when the device is unknown, inact
 
 ### `GET /devices`
 
-Returns `200` with an array of devices. Each device contains `cd_device`, `name`, `serial`, `mac_addr`, `device_ip`, `dt_created`, `dt_modified`, and `active`. Secret hashes are not returned.
+Returns `200` with an array of devices. Each device contains `cd_device`, `name`, `serial`, `mac_addr`, `device_ip`, `dt_created`, `dt_modified`, `last_refresh`, and `active`. `last_refresh` is `null` until the device successfully requests an access token, then contains the UTC timestamp of the most recent successful refresh. Secret hashes are not returned.
 
 ### `GET /devices/:cd_device`
 
