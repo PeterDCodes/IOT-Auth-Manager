@@ -1,3 +1,5 @@
+.PHONY: server example docker-server keys test test-service test-example
+
 server:
 	cd service && npm start
 
@@ -10,3 +12,10 @@ docker-server:
 keys:
 	cd service/keys && ./makeKeys.sh
 
+test: test-service test-example
+
+test-service:
+	node --test test/serviceTest.js
+
+test-example:
+	node --test test/exampleTest.js
