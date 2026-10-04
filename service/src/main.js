@@ -2,7 +2,7 @@ import express from "express"
 import cors from "cors"
 import database, { verifyDatabaseConnection } from "./data/database.js"
 import logger from "./utils/logging.js"
-import { jsonBodyCheck } from "../../utilities/jsonBodyCheck.js"
+import { jsonBodyCheck } from "./utils/jsonBodyCheck.js"
 import rateLimiter from "./utils/rateLimit.js"
 
 

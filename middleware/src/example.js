@@ -1,14 +1,10 @@
 //Example implementation of an API that uses the AUTH service JWKS
 import express from "express"
 import cors from "cors"
-
-import { jsonBodyCheck } from "../../utilities/jsonBodyCheck.js"
-
-
 const app = express();
 const port = 3001;
 app.use(cors());
-app.use(express.json(), jsonBodyCheck);
+app.use(express.json());
 
 //Key manager
 import {
