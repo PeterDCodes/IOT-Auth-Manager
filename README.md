@@ -4,6 +4,12 @@ PostgreSQL-backed device authentication using RS256 JWTs. The auth service signs
 
 <img width="2312" height="1284" alt="image" src="https://github.com/user-attachments/assets/ffdfdf13-ab05-4170-8954-ca1804a8ee55" />
 
+
+## Directory Structure
+clients - implementation of client devices registering to service and maintaing secret, refresh, etc.
+middelware - Standard authenticate middelwear and example of how to use in express projects
+service - Main DIR containing the authentication mmanager service
+
 ## Setup
 
 From `service/`:
