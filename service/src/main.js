@@ -55,7 +55,7 @@ const startServer=async()=>{
       console.log(`AUTH Service listening on port ${port}`);
     });
   } catch (error) {
-    logger.error(`Failed to launch Auth service: ${error.message}`)
+    logger.error({ err: error }, "Failed to launch Auth service")
     await database.end()
     process.exitCode = 1
   }

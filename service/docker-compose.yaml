@@ -3,15 +3,17 @@ services:
   auth-server:
     build: .
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       NODE_ENV: production
-      JWT_PRIVATE_KEY_PATH: /keys/private.pem
-      JWT_PUBLIC_KEY_PATH: /keys/public.pem
+      # PostgreSQL runs on the host, outside this container.
+      PGHOST: host.docker.internal
+      JWT_PRIVATE_KEY_PATH: /app/keys/private.pem
+      JWT_PUBLIC_KEY_PATH: /app/keys/public.pem
 
-    volumes:
-      - /home/ultra/Secrets/IOT-AUTH-MANAGER/private.pem:/keys/private.pem:ro
-      - /home/ultra/Secrets/IOT-AUTH-MANAGER/public.pem:/keys/public.pem:ro
+    # volumes:
+    #   - /home/ultra/Secrets/IOT-AUTH-MANAGER/private.pem:/keys/private.pem:ro
+    #   - /home/ultra/Secrets/IOT-AUTH-MANAGER/public.pem:/keys/public.pem:ro
 
     env_file:
       - .env

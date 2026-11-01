@@ -7,7 +7,7 @@ example:
 	cd middleware && npm run example
 
 docker-server:
-	cd service && docker compose up -d
+	cd service && docker compose up -d --build
 
 keys:
 	cd service/keys && ./makeKeys.sh
