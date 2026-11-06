@@ -1,0 +1,48 @@
+services:
+
+  etcd:
+    image: bitnamilegacy/etcd:3.5.11
+    container_name: apisix-etcd
+    restart: unless-stopped
+
+    environment:
+      ETCD_ENABLE_V2: "true"
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+
+    volumes:
+      - etcd_data:/bitnami/etcd
+
+    networks:
+      - apisix
+
+  apisix:
+    image: apache/apisix:latest
+    container_name: apisix
+    restart: unless-stopped
+
+    env_file:
+          - ./.env
+
+    depends_on:
+      - etcd
+
+    volumes:
+      - ./config.yaml:/usr/local/apisix/conf/config.yaml:ro
+
+    ports:
+      - "9080:9080"
+      - "9444:9443"
+      - "127.0.0.1:9180:9180"
+
+    networks:
+      - apisix
+
+
+networks:
+  apisix:
+
+volumes:
+  etcd_data:
+    name: apisix-etcd-data

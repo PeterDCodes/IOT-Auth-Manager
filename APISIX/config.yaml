@@ -1,0 +1,21 @@
+
+deployment:
+  role: traditional
+  role_traditional:
+    config_provider: etcd
+
+  admin:
+    enable_admin_ui: true
+
+    admin_key:
+      - name: admin
+        key: ${{ADMIN_KEY}}
+        role: admin
+
+    allow_admin:
+      - 127.0.0.1/24
+      - 172.16.0.0/12
+
+  etcd:
+    host:
+      - "http://etcd:2379"
