@@ -32,7 +32,7 @@ app.get("/", (req, res) => {
 //Use JWKS route
 app.use("/.well-known", metaRoutes)
 //Use authentication routes
-app.use("/auth", authRoutes)
+app.use("/", authRoutes)
 //Use device routes
 app.use("/devices", deviceRoutes)
 

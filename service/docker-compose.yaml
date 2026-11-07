@@ -1,9 +1,9 @@
 # docker-compose.yaml
 services:
   auth-server:
+    container_name: IOT-AUTH-MANAGER
     build: .
-    ports:
-      - "3001:3000"
+
     environment:
       NODE_ENV: production
       # PostgreSQL runs on the host, outside this container.
@@ -11,9 +11,9 @@ services:
       JWT_PRIVATE_KEY_PATH: /app/keys/private.pem
       JWT_PUBLIC_KEY_PATH: /app/keys/public.pem
 
-    # volumes:
-    #   - /home/ultra/Secrets/IOT-AUTH-MANAGER/private.pem:/keys/private.pem:ro
-    #   - /home/ultra/Secrets/IOT-AUTH-MANAGER/public.pem:/keys/public.pem:ro
+    volumes:
+      - ./keys/private.pem:/app/keys/private.pem:ro
+      - ./keys/public.pem:/app/keys/public.pem:ro
 
     env_file:
       - .env
