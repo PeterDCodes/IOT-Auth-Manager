@@ -48,7 +48,6 @@ services:
     environment:
       NODE_ENV: production
       # PostgreSQL runs on the host, outside this container.
-      PGHOST: host.docker.internal
       JWT_PRIVATE_KEY_PATH: /app/keys/private.pem
       JWT_PUBLIC_KEY_PATH: /app/keys/public.pem
 
