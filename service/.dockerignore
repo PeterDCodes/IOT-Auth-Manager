@@ -1,2 +1,30 @@
-node_modules
+# Dependencies installed in the image
+**/node_modules/
+
+# Local configuration and signing keys
 .env
+.env.*
+.env-*
+**/*.pem
+
+# Version control and editor files
+.git/
+.gitignore
+.idea/
+.vscode/
+**/.DS_Store
+**/._*
+**/*~
+**/*.swp
+**/*.swo
+
+# Logs and test output
+**/*.log
+coverage/
+.nyc_output/
+
+# Local orchestration files
+docker-compose*.yaml
+docker-compose*.yml
+compose*.yaml
+compose*.yml
