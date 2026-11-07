@@ -57,43 +57,8 @@ else
     exit 1
 fi
 
-
 # -------------------------------------------------------
-# Create APISIX service
-# -------------------------------------------------------
-echo "Creating APISIX service: example-api"
-
-PAYLOAD=$(cat <<EOF
-{
-  "name": "example-api",
-  "upstream_id": "1",
-  "plugins": {
-    "jwt-auth": {}
-  }
-}
-EOF
-)
-
-if curl --fail-with-body \
-    --silent \
-    --show-error \
-    -X PUT \
-    "http://127.0.0.1:9180/apisix/admin/services/1" \
-    -H "X-API-KEY: ${ADMIN_KEY}" \
-    -H "Content-Type: application/json" \
-    -d "$PAYLOAD"
-then
-    echo
-    echo "APISIX service created successfully."
-else
-    echo
-    echo "ERROR: Failed to create APISIX service."
-    exit 1
-fi
-
-
-# -------------------------------------------------------
-# Create APISIX route
+# Create APISIX route - will leverage service_id iot-auth-manager which is the auth manager plugin
 # -------------------------------------------------------
 echo "Creating APISIX route: example-api"
 
@@ -101,7 +66,7 @@ PAYLOAD=$(cat <<EOF
 {
   "name": "example-api",
   "uri": "/example",
-  "service_id": "1",
+  "service_id": "iot-auth-manager",
   "plugins": {
     "proxy-rewrite": {
       "uri": "/"
