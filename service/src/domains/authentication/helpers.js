@@ -90,7 +90,9 @@ export const signAccessToken = (cdDevice, environment = process.env) => {
   //jwt.sign(payload, secretOrPrivateKey, [options, callback])
   return jwt.sign(
     //Custom payload fields
-    { cd_device: cdDevice },
+    { cd_device: cdDevice,
+      key: settings.issuer
+    },
     //PrivateKey
     settings.signingKey,
     {
@@ -99,7 +101,7 @@ export const signAccessToken = (cdDevice, environment = process.env) => {
       issuer: settings.issuer,
       audience: settings.audience,
       subject: String(cdDevice),
-      expiresIn: settings.expires_in
+      expiresIn: settings.expires_in,
     }
   )
 }
