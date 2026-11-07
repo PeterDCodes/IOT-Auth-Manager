@@ -65,6 +65,7 @@ echo "Creating APISIX route: example-api"
 PAYLOAD=$(cat <<EOF
 {
   "name": "example-api",
+  "upstream_id": "1",
   "uri": "/example",
   "service_id": "iot-auth-manager",
   "plugins": {
