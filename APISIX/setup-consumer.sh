@@ -27,7 +27,7 @@ echo "Configuration loaded successfully."
 
 
 # -------------------------------------------------------
-# Load public key
+# Load public key from file
 # -------------------------------------------------------
 echo "Loading public key from ${PUB_KEY_PATH}"
 
@@ -47,7 +47,7 @@ echo "Public key loaded successfully."
 
 
 # -------------------------------------------------------
-# Create APISIX consumer
+# Create APISIX consumer profile
 # -------------------------------------------------------
 echo "Creating APISIX consumer: iot-device-consumer"
 
@@ -57,6 +57,7 @@ PUBLIC_KEY_JSON=${PUBLIC_KEY//$'\n'/\\n}
 PAYLOAD=$(cat <<EOF
 {
   "username": "iot-device-consumer",
+  "desc": "Standard iot device consumer",
   "plugins": {
     "jwt-auth": {
       "key": "${SERVICE_KEY}",

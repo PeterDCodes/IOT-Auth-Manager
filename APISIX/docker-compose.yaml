@@ -40,6 +40,15 @@ services:
       - apisix
 
 
+  example-api:
+    image: example-api:latest
+    container_name: example_api
+    restart: unless-stopped
+
+    networks:
+      - apisix
+
+
 networks:
   apisix:
 
