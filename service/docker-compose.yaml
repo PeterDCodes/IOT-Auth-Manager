@@ -1,6 +1,6 @@
 # docker-compose.yaml
 services:
-  auth-server:
+  iot-auth-manager:
     container_name: IOT-AUTH-MANAGER
     build: .
 
