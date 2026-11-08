@@ -3,7 +3,6 @@ import cors from "cors"
 import database, { verifyDatabaseConnection } from "./data/database.js"
 import logger from "./utils/logging.js"
 import { jsonBodyCheck } from "./utils/jsonBodyCheck.js"
-import rateLimiter from "./utils/rateLimit.js"
 
 
 //Import Routes and supporting endpoints
@@ -20,7 +19,6 @@ import pinoHttp from "pino-http";
 const app = express();
 const port = 3000;
 app.use(cors());
-app.use(rateLimiter)
 app.use(express.json(), jsonBodyCheck);
 app.use(pinoHttp())
 
