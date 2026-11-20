@@ -1,24 +1,8 @@
-import { getDeviceById, validateHash } from "../devices/data.js"
+import { getDeviceAuthenticationByUuid, validateHash } from "../devices/data.js"
 import jwt from "jsonwebtoken"
-import * as fs from 'node:fs'; 
 import logger from "../../utils/logging.js"
 
 import { getPrivateKey } from "../../../keys/helpers.js"
-
-export const validateRefresh = (body) => {
-  if (!body || Array.isArray(body) || Object.keys(body).length !== 2 ||
-      !("cd_device" in body) || !("secret" in body)) {
-    throw new Error("Refresh request body must only include cd_device and secret")
-  }
-
-  if (!Number.isInteger(body.cd_device)) {
-    throw new Error("cd_device must be an integer")
-  }
-
-  if (typeof body.secret !== "string" || !/^[a-f0-9]{64}$/.test(body.secret)) {
-    throw new Error("secret must be a valid secret")
-  }
-}
 
 /**
  * Reads env file and returns token settings
@@ -57,21 +41,21 @@ export const getTokenSettings=(environment=process.env)=>{
 
 /**
  * Validates a client secret against active devices in the DB. Used durring a token refresh request.
- * @param { number } cd_device device ID
+ * @param {string} uuid device UUID
  * @param {string} secret device secret
  * @return {bool} authorized status of true or false
  */
-export const validateClientSecret=async(cd_device, secret)=>{
+export const validateClientSecret=async(uuid, secret)=>{
 
   //Check if the device exists and is active
-  const user = await getDeviceById(cd_device);
-  if(!user || user.active !== true){
+  const authentication = await getDeviceAuthenticationByUuid(uuid);
+  if(!authentication || authentication.fl_active !== true){
     return false;
   }
 
   //Hash the key
-  const { hashed_key } = user
-  const valid = await validateHash(secret, hashed_key);
+  const { ds_hashed_key } = authentication
+  const valid = await validateHash(secret, ds_hashed_key);
 
   return valid;
 }
@@ -79,18 +63,18 @@ export const validateClientSecret=async(cd_device, secret)=>{
 
 /**
  * Signs a JWT access token
- * @param { number } cdDevice 
+ * @param {string} uuid
  * @param { process.env } environment 
  * @returns 
  */
-export const signAccessToken = (cdDevice, environment = process.env) => {
+export const signAccessToken = (uuid, environment = process.env) => {
   
   const settings = getTokenSettings(environment)
 
   //jwt.sign(payload, secretOrPrivateKey, [options, callback])
   return jwt.sign(
     //Custom payload fields
-    { cd_device: cdDevice,
+    { uuid,
       key: settings.issuer
     },
     //PrivateKey
@@ -100,7 +84,7 @@ export const signAccessToken = (cdDevice, environment = process.env) => {
       algorithm: settings.algorithm,
       issuer: settings.issuer,
       audience: settings.audience,
-      subject: String(cdDevice),
+      subject: uuid,
       expiresIn: settings.expires_in,
     }
   )
@@ -111,16 +95,16 @@ export const signAccessToken = (cdDevice, environment = process.env) => {
 
 /**
  * Creates and returns a full credential with signed JWT token
- * @param { number } cd_device 
+ * @param {string} uuid
  * @returns 
  */
-export const buildCredential=(cd_device)=>{
+export const buildCredential=(uuid)=>{
 
     //Read Settings
-    const { token_type, expires_in } = getTokenSettings(process.environment)
+    const { token_type, expires_in } = getTokenSettings(process.env)
 
     //create a Signed JWT credential to return to the client
-    const access_token = signAccessToken(cd_device)
+    const access_token = signAccessToken(uuid)
     
     //Returned back to a valid device.
     const credential = {

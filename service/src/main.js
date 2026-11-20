@@ -9,6 +9,9 @@ import rateLimiter from "./utils/rateLimit.js"
 //Import Routes and supporting endpoints
 import { authRoutes } from "./domains/authentication/index.js"
 import { deviceRoutes }  from "./domains/devices/index.js"
+import { deviceTypeRoutes } from "./domains/deviceTypes/index.js"
+import { deviceModelRoutes } from "./domains/deviceModels/index.js"
+import { deviceDeploymentRoutes } from "./domains/deviceDeployments/index.js"
 import { metaRoutes } from "./domains/metadata/index.js"
 
 //Keys Helpers
@@ -35,6 +38,9 @@ app.use("/.well-known", metaRoutes)
 app.use("/", authRoutes)
 //Use device routes
 app.use("/devices", deviceRoutes)
+app.use("/device-types", deviceTypeRoutes)
+app.use("/device-models", deviceModelRoutes)
+app.use("/device-deployments", deviceDeploymentRoutes)
 
 
 //Catch any random/unhandled route (404 handler)

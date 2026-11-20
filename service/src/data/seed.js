@@ -3,7 +3,7 @@ import database from "./database.js"
 import logger from "../utils/logging.js"
 
 
-const seedPath = new URL("./seed.sql", import.meta.url)
+const seedPath = new URL("./seed-v2.sql", import.meta.url)
 
 try {
   const seedSql = await readFile(seedPath, "utf8")

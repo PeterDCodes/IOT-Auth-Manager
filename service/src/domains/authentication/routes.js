@@ -1,7 +1,8 @@
 //AUTH Routes
 import express from "express"
 import { registerNewDevice, updateLastRefresh } from "../devices/data.js"
-import { buildCredential, validateClientSecret, validateRefresh } from "./helpers.js"
+import { buildCredential, validateClientSecret } from "./helpers.js"
+import { validateRefresh } from "./validation.js"
 import logger from "../../utils/logging.js"
 
 
@@ -23,24 +24,21 @@ router.post("/register", async (req, res) => {
     })
   }
 
-  //Step 1 verify registration request body
-  const register = req.body ?? {}
-  const {name, serial, mac_addr, device_ip} = register
-
-  if ([name, serial, mac_addr, device_ip].some(value => value == null)) {
-    return res.status(400).send("Missing required fields");
-  }
-
   //Initiate the registration
   try{
-    const { cd_device, secret } = await registerNewDevice(register)
+    const { uuid, secret } = await registerNewDevice(req.body)
 
-    //Return the registration key back to the client
+    if (secret) {
+      return res.status(200).json({
+        message: "Device successfully registered and authenticated",
+        uuid,
+        secret
+      })
+    }
+
     return res.status(200).json({
-      "message": "Device successfully Registered!",
-      "cd_device": cd_device,
-      "secret": secret
-    });
+      message: "Device successfully registered"
+    })
   }catch(error){
     return res.status(400).send(error.cause?.message ?? error.message)
   }
@@ -55,11 +53,11 @@ router.post("/refresh", async(req, res)=>{
       return res.status(400).send(error.message)
     }
 
-    //Check the body for the database-generated device code and secret
-    const {cd_device, secret} = req.body
+    //Check the body for the device UUID and secret
+    const {uuid, secret} = req.body
 
     //Validate the token
-    const authorized = await validateClientSecret(cd_device, secret);
+    const authorized = await validateClientSecret(uuid, secret);
 
     //TODO - Set up formal logging feature
     logger.info("AUTH STATUS: " + authorized);
@@ -69,8 +67,8 @@ router.post("/refresh", async(req, res)=>{
     }
 
     //Build and return credential to client
-    const credential = buildCredential(cd_device)
-    await updateLastRefresh(cd_device)
+    const credential = buildCredential(uuid)
+    await updateLastRefresh(uuid)
     return res.status(200).json(credential)
 
 });
