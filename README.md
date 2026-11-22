@@ -26,6 +26,10 @@ Set `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `JWT_PRIVATE_KEY_P
 
 The service runs at `http://localhost:3000`.
 
+## Documentation
+
+- [Deployment](docs/deployment.md) - single-site and multi-site IIoT deployment models, capabilities, and operational limits.
+
 ## Authentication contract
 
 1. Register a device and retain its `cd_device` and `secret`.
