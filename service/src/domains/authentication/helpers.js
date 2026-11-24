@@ -1,41 +1,34 @@
 import { getDeviceAuthenticationByUuid, validateHash } from "../devices/data.js"
 import jwt from "jsonwebtoken"
-import logger from "../../utils/logging.js"
+import database from "../../data/database.js"
 
 import { getPrivateKey } from "../../../keys/helpers.js"
 
+
 /**
- * Reads env file and returns token settings
- * @param environment process.env file
+ * Loads the newest active token configuration with the given name.
+ * @param {string} configName configuration name
+ * @returns {Promise<object|null>} token settings, or null if no active config exists
  */
-export const getTokenSettings=(environment=process.env)=>{
+export const loadTokenConfig=async(configName)=>{
+  const { rows: [config] } = await database.query(`
+    SELECT issuer, audience, expires_in
+    FROM config
+    WHERE name = $1 AND active = TRUE
+    ORDER BY dt_created DESC, cd_config DESC
+    LIMIT 1
+  `, [configName])
 
-  //Stub
-  const tokenSettings = {
-    signingKey: null,
-    algorithm: null,
-    issuer: null,
-    audience: null,
-    expires_in: null
-  }
-  //Try to get all values from env
-  //TODO - set this up to be modified as needed with env
-  try{
-    //Get Key
-    const privateKey = getPrivateKey()
-    tokenSettings.signingKey = privateKey
-    //Get Rest of token settings
-    tokenSettings.algorithm = "RS256"
-    tokenSettings.token_type = "Bearer"
-    tokenSettings.issuer = environment.ISSUER
-    tokenSettings.audience = environment.AUDIENCE
-    tokenSettings.expires_in = environment.EXPIRES_IN
-  }catch(error){
-    logger.error("Missing Required Settings value: " + error);
+  if (!config) {
+    return null
   }
 
-  //TODO - need my error handling cleaned up for end users calling the api
-  return tokenSettings;
+  return {
+    signingKey: getPrivateKey(),
+    algorithm: "RS256",
+    token_type: "Bearer",
+    ...config
+  }
 }
 
 
@@ -62,17 +55,20 @@ export const validateClientSecret=async(uuid, secret)=>{
 
 
 /**
- * Signs a JWT access token
+ * Signs a JWT access token and returns it with its credential metadata.
  * @param {string} uuid
- * @param { process.env } environment 
- * @returns 
+ * @param {string} config the name of the token config to use
+ * @returns {Promise<{access_token: string, token_type: string, expires_in: string, config: string}|null>}
  */
-export const signAccessToken = (uuid, environment = process.env) => {
+export const signAccessToken = async(uuid, config="default") => {
   
-  const settings = getTokenSettings(environment)
+  const settings = await loadTokenConfig(config)
+  if (!settings) {
+    return null
+  }
 
   //jwt.sign(payload, secretOrPrivateKey, [options, callback])
-  return jwt.sign(
+  const access_token = jwt.sign(
     //Custom payload fields
     { uuid,
       key: settings.issuer
@@ -88,30 +84,24 @@ export const signAccessToken = (uuid, environment = process.env) => {
       expiresIn: settings.expires_in,
     }
   )
+
+  return {
+    access_token,
+    token_type: settings.token_type,
+    expires_in: settings.expires_in,
+    config
+  }
 }
 
 
 
 
 /**
- * Creates and returns a full credential with signed JWT token
+ * Returns a signed credential, or null if the requested configuration is unavailable.
  * @param {string} uuid
- * @returns 
+ * @param {string} config the name of the token config to use
+ * @returns {ReturnType<typeof signAccessToken>}
  */
-export const buildCredential=(uuid)=>{
-
-    //Read Settings
-    const { token_type, expires_in } = getTokenSettings(process.env)
-
-    //create a Signed JWT credential to return to the client
-    const access_token = signAccessToken(uuid)
-    
-    //Returned back to a valid device.
-    const credential = {
-        "access_token": access_token,
-        "token_type": token_type,
-        "expires_in": expires_in
-    };
-
-    return credential;
+export const buildCredential=(uuid, config)=>{
+  return signAccessToken(uuid, config)
 }

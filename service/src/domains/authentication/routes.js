@@ -53,8 +53,7 @@ router.post("/refresh", async(req, res)=>{
       return res.status(400).send(error.message)
     }
 
-    //Check the body for the device UUID and secret
-    const {uuid, secret} = req.body
+    const { uuid, secret, config } = req.body
 
     //Validate the token
     const authorized = await validateClientSecret(uuid, secret);
@@ -67,7 +66,11 @@ router.post("/refresh", async(req, res)=>{
     }
 
     //Build and return credential to client
-    const credential = buildCredential(uuid)
+    const credential = await buildCredential(uuid, config)
+    if (!credential) {
+      return res.status(400).json({ error: "No active token configuration found for the requested config" })
+    }
+
     await updateLastRefresh(uuid)
     return res.status(200).json(credential)
 

@@ -50,7 +50,7 @@ test("registration accepts integer reference IDs and authenticate flag", () => {
   )
 })
 
-test("refresh requires exactly a UUID and generated secret", () => {
+test("refresh requires a UUID and generated secret", () => {
   assert.doesNotThrow(() => validateRefresh({
     uuid: "123e4567-e89b-42d3-a456-426614174000",
     secret: "a".repeat(64)
@@ -68,4 +68,17 @@ test("refresh requires exactly a UUID and generated secret", () => {
     }),
     /must only include uuid and secret/
   )
+})
+
+test("refresh accepts an optional non-empty config name", () => {
+  const body = {
+    uuid: "123e4567-e89b-42d3-a456-426614174000",
+    secret: "a".repeat(64)
+  }
+
+  assert.doesNotThrow(() => validateRefresh({ ...body, config: "short-lived" }))
+
+  for (const config of ["", " ", null, 123, {}]) {
+    assert.throws(() => validateRefresh({ ...body, config }), /config must be a non-empty string/)
+  }
 })

@@ -1,7 +1,8 @@
 export const validateRefresh = (body) => {
-  if (!body || Array.isArray(body) || Object.keys(body).length !== 2 ||
-      !("uuid" in body) || !("secret" in body)) {
-    throw new Error("Refresh request body must only include uuid and secret")
+  if (!body || typeof body !== "object" || Array.isArray(body) ||
+      !Object.hasOwn(body, "uuid") || !Object.hasOwn(body, "secret") ||
+      Object.keys(body).some((key) => !["uuid", "secret", "config"].includes(key))) {
+    throw new Error("Refresh request body must only include uuid and secret, with optional config")
   }
 
   if (typeof body.uuid !== "string" ||
@@ -11,5 +12,10 @@ export const validateRefresh = (body) => {
 
   if (typeof body.secret !== "string" || !/^[a-f0-9]{64}$/.test(body.secret)) {
     throw new Error("secret must be a valid secret")
+  }
+
+  if (Object.hasOwn(body, "config") &&
+      (typeof body.config !== "string" || body.config.trim() === "")) {
+    throw new Error("config must be a non-empty string")
   }
 }
