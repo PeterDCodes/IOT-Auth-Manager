@@ -71,7 +71,7 @@ export const signAccessToken = async(uuid, config="default") => {
   const access_token = jwt.sign(
     //Custom payload fields
     { uuid,
-      key: settings.issuer
+      key: settings.audience
     },
     //PrivateKey
     settings.signingKey,
