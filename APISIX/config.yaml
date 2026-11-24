@@ -1,3 +1,11 @@
+apisix:
+  proxy_mode: http&stream   # or 'stream' for stream proxy only
+  stream_proxy:
+    tcp:
+      - addr: 9100          # listen on port 9100 across all interfaces
+      - addr: "127.0.0.1:9101"
+    udp:
+      - 9200                # listen on UDP port 9200 across all interfaces
 
 deployment:
   role: traditional
