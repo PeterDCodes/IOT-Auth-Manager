@@ -42,7 +42,7 @@ services:
 
 
   iot-auth-manager:
-    image: iot-auth-manager:latest
+    image: iot-auth-manager:v2.0.0
     container_name: iot-auth-manager
 
     environment:
