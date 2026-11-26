@@ -30,11 +30,13 @@ services:
 
     volumes:
       - ./config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./custom-plugins:/opt/custom-plugins:ro
 
     ports:
       - "9080:9080"
       - "9444:9443"
       - "127.0.0.1:9180:9180"
+      - "127.0.0.1:9100:9100"
 
     networks:
       - apisix
