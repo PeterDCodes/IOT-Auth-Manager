@@ -1,8 +1,8 @@
 # MQTT authentication through APISIX
 
-<img width="2448" height="378" alt="image" src="https://github.com/user-attachments/assets/ebd5d26e-6404-43a1-afcb-49127db662c2" />
-
 APISIX gives us one authentication approach for HTTP APIs and MQTT. Devices get a signed JWT from IOT Auth Manager. For HTTP, the client sends it as a bearer token and APISIX's built-in `jwt-auth` plugin checks it. For MQTT, the client connects to APISIX over TLS and sends the JWT as the password in its MQTT CONNECT packet.
+
+<img width="2448" height="378" alt="image" src="https://github.com/user-attachments/assets/ebd5d26e-6404-43a1-afcb-49127db662c2" />
 
 The custom `mqtt-auth-proxy` plugin intercepts the CONNECT packet and reads the username and password. It uses the password as the JWT and verifies the RS256 signature with the configured public key (`public.pem`). It also checks the token's expiration and device claims. If the token is valid, APISIX forwards the connection to Mosquitto. If it’s invalid, APISIX refuses the connection.
 
