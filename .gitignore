@@ -5,6 +5,9 @@ node_modules/
 
 *.pem
 
+*.crt
+*.key
+
 
 middleware/jwks.json
 middleware/jwks.json

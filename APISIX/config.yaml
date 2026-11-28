@@ -3,12 +3,13 @@ apisix:
   stream_proxy:
     tcp:
       - addr: 9100          # listen on port 9100 across all interfaces
-      - addr: "127.0.0.1:9101"
+        tls: true
     udp:
       - 9200                # listen on UDP port 9200 across all interfaces
 
   # Defines path of custom plugins
   extra_lua_path: "/opt/custom-plugins/?.lua"
+
 
 # An explicit list replaces the built-in stream plugin defaults.
 stream_plugins:

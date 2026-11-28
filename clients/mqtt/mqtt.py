@@ -43,6 +43,7 @@ class MQTT:
 
         try:
             try:
+                client.tls_set()
                 result = client.connect(self.broker, self.port)
             except OSError as error:
                 raise RuntimeError(f'Network connection failed: {error}') from error

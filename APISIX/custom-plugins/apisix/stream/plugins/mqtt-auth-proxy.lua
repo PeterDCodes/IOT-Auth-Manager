@@ -16,11 +16,13 @@
 --
 local core = require("apisix.core")
 local bit = require("bit")
-local jwt_parser = require("apisix.plugins.jwt-auth.parser")
+local json = require("cjson.safe")
+local base64 = require("ngx.base64")
+local pkey = require("resty.openssl.pkey")
 local ngx = ngx
 local band = bit.band
 local byte = string.byte
-local consumers
+local rsa_nid = 6 -- OpenSSL NID_rsaEncryption.
 
 core.ctx.register_var("mqtt_client_id", function(ctx)
     return ctx.mqtt_client_id
@@ -31,9 +33,10 @@ local schema = {
     properties = {
         protocol_name = {type = "string", default = "MQTT"},
         protocol_level = {type = "integer", enum = {4, 5}},
-        key = {type = "string", minLength = 1},
+        public_key = {type = "string", minLength = 1},
+        lifetime_grace_period = {type = "integer", minimum = 0, default = 0},
     },
-    required = {"protocol_level", "key"},
+    required = {"protocol_level", "public_key"},
 }
 
 local _M = {
@@ -43,17 +46,23 @@ local _M = {
     schema = schema,
 }
 
-function _M.check_schema(conf)
-    return core.schema.check(schema, conf)
+local function load_public_key(pem)
+    local key = pkey.new(pem, {format = "PEM", type = "pu"})
+    if key and key:get_key_type(true) == rsa_nid and key:get_size() >= 256 then
+        return key
+    end
 end
 
-function _M.init()
-    -- Stream workers need their own watch of the APISIX consumer profiles.
-    local err
-    consumers, err = core.config.new("/consumers", {automatic = true})
-    if not consumers then
-        core.log.error("failed to watch MQTT auth consumers: ", err)
+function _M.check_schema(conf)
+    local ok, err = core.schema.check(schema, conf)
+    if not ok then
+        return false, err
     end
+    local loaded, key = pcall(load_public_key, conf.public_key)
+    if not loaded or not key then
+        return false, "public_key must be a PEM RSA public key of at least 2048 bits"
+    end
+    return true
 end
 
 local function decode_variable_byte_int(data, offset)
@@ -161,23 +170,59 @@ local function parse_mqtt(data, pos, conf)
     return {client_id = client_id, username = username, password = password}
 end
 
-local function validate_jwt(token, key)
-    local entry = consumers and consumers:get(key)
-    local plugins = entry and entry.value and entry.value.plugins
-    local auth = plugins and plugins["jwt-auth"]
-    if not auth or auth.algorithm ~= "RS256" or type(auth.public_key) ~= "string"
-        or not token or token == ""
+local function decode_segment(encoded)
+    local data = base64.decode_base64url(encoded)
+    if data and base64.encode_base64url(data) == encoded then
+        return data
+    end
+end
+
+local function decode_json_segment(encoded)
+    local data = decode_segment(encoded)
+    if data and data:match("^%s*{") then
+        return json.decode(data)
+    end
+end
+
+local function is_numeric_date(value)
+    return type(value) == "number" and value > -math.huge and value < math.huge
+end
+
+local function validate_jwt(token, conf)
+    if not token then
+        return false
+    end
+    local signed, raw_header, raw_payload, raw_signature =
+        token:match("^(([A-Za-z0-9_-]+)%.([A-Za-z0-9_-]+))%.([A-Za-z0-9_-]+)$")
+    if not signed then
+        return false
+    end
+
+    local header = decode_json_segment(raw_header)
+    local signature = decode_segment(raw_signature)
+    if not header or header.alg ~= "RS256" or header.crit ~= nil or header.b64 ~= nil
+        or not signature
     then
         return false
     end
 
-    local jwt = jwt_parser.new(token)
-    if not jwt or type(jwt.header) ~= "table" or jwt.header.alg ~= "RS256"
-        or type(jwt.payload) ~= "table" or not jwt:verify_signature(auth.public_key)
+    local key = load_public_key(conf.public_key)
+    if not key or not key:verify(signature, signed, "sha256", pkey.PADDINGS.RSA_PKCS1_PADDING) then
+        return false
+    end
+
+    local claims = decode_json_segment(raw_payload)
+    if not claims or type(claims.sub) ~= "string" or claims.sub == ""
+        or claims.uuid ~= claims.sub
     then
         return false
     end
-    return jwt:verify_claims(nil, {lifetime_grace_period = auth.lifetime_grace_period})
+
+    local now = ngx.time()
+    local grace = conf.lifetime_grace_period or 0
+    return is_numeric_date(claims.exp) and now < claims.exp + grace
+        and (claims.nbf == nil or (is_numeric_date(claims.nbf) and claims.nbf <= now + grace))
+        and (claims.iat == nil or (is_numeric_date(claims.iat) and claims.iat <= now + grace))
 end
 
 function _M.preread(conf, ctx)
@@ -202,7 +247,8 @@ function _M.preread(conf, ctx)
         return 400
     end
 
-    if not validate_jwt(connect.password, conf.key) then
+    local ok, valid = pcall(validate_jwt, connect.password, conf)
+    if not ok or not valid then
         -- MQTT 5 uses reason 0x87 and an empty properties field.
         local reply = conf.protocol_level == 5 and "\x20\x03\x00\x87\x00"
                       or "\x20\x02\x00\x05"

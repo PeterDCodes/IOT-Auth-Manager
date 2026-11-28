@@ -23,21 +23,17 @@ if [[ "$MQTT_PROTOCOL_LEVEL" != 4 && "$MQTT_PROTOCOL_LEVEL" != 5 ]]; then
   exit 1
 fi
 
-consumer_name=mqtt-consumer
 route_id=mqtt-route-proxy
 
-consumer_payload=$(jq -n --arg name "$consumer_name" --rawfile public_key "$PUB_KEY_PATH" '
-  {
-    username: $name,
-    plugins: {"jwt-auth": {key: $name, algorithm: "RS256", public_key: $public_key}}
-  }
-')
-
-route_payload=$(jq -n --arg key "$consumer_name" --arg host "$MQTT_BROKER_HOST" \
-  --argjson port "$MQTT_BROKER_PORT" --argjson level "$MQTT_PROTOCOL_LEVEL" '
+route_payload=$(jq -n --rawfile public_key "$PUB_KEY_PATH" \
+  --arg host "$MQTT_BROKER_HOST" --argjson port "$MQTT_BROKER_PORT" \
+  --argjson level "$MQTT_PROTOCOL_LEVEL" '
   {
     server_port: 9100,
-    plugins: {"mqtt-auth-proxy": {key: $key, protocol_name: "MQTT", protocol_level: $level}},
+    plugins: {"mqtt-auth-proxy": {
+      public_key: $public_key,
+      protocol_name: "MQTT", protocol_level: $level
+    }},
     upstream: {type: "roundrobin", nodes: [{host: $host, port: $port, weight: 1}]}
   }
 ')
@@ -51,5 +47,4 @@ put_config() {
   printf '\n'
 }
 
-put_config "consumers/$consumer_name" "$consumer_payload"
 put_config "stream_routes/$route_id" "$route_payload"
