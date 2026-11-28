@@ -30,6 +30,7 @@ The service runs at `http://localhost:3000`.
 
 - [Deployment](docs/deployment.md) - single-site and multi-site IIoT deployment models, capabilities, and operational limits.
 - [JWT token configurations](docs/jwt-token-configs.md) - set up default and named configurations in PostgreSQL and select them when refreshing a token.
+- [MQTT authentication through APISIX](docs/mqtt-authentication.md) - shared JWT authentication for HTTP APIs and MQTT, and private broker access.
 
 ## Authentication contract
 
